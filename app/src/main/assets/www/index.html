@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Alinas Kaufladen</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
+
+:root{
+  --cream:#FFF8EC;
+  --cream-2:#FFFDF8;
+  --brown:#7A4E2D;
+  --brown-dark:#4E3218;
+  --red:#E8543E;
+  --red-dark:#C63F2C;
+  --green:#3F9463;
+  --green-dark:#2C7A4E;
+  --yellow:#F4B93E;
+  --ink:#2B2320;
+  --radius:22px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--cream);
+  font-family:'Nunito',sans-serif;
+  color:var(--ink);
+  min-height:100vh;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+h1,h2,h3,.display{font-family:'Baloo 2',sans-serif;}
+
+.awning{
+  height:26px;
+  background:repeating-linear-gradient(115deg, var(--red) 0 34px, var(--cream-2) 34px 68px);
+  border-bottom:4px solid var(--brown-dark);
+}
+.topbar{
+  background:var(--brown);
+  color:var(--cream-2);
+  padding:14px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.topbar h1{
+  margin:0;
+  font-size:1.4rem;
+  font-weight:800;
+  letter-spacing:0.5px;
+}
+.topbar button{
+  font-family:'Baloo 2',sans-serif;
+  font-weight:700;
+  font-size:1rem;
+  background:var(--cream-2);
+  color:var(--brown-dark);
+  border:none;
+  border-radius:14px;
+  padding:10px 16px;
+  cursor:pointer;
+}
+.topbar button:active{transform:scale(0.96);}
+
+main{
+  max-width:900px;
+  margin:0 auto;
+  padding:22px 16px 60px;
+}
+
+.home-grid{
+  display:grid;
+  gap:20px;
+  margin-top:10px;
+}
+.big-btn{
+  border:none;
+  border-radius:28px;
+  padding:34px 20px;
+  font-family:'Baloo 2',sans-serif;
+  font-weight:800;
+  font-size:1.6rem;
+  color:#fff;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  box-shadow:0 8px 0 rgba(0,0,0,0.15);
+  transition:transform .08s;
+}
+.big-btn:active{transform:translateY(6px);box-shadow:0 2px 0 rgba(0,0,0,0.15);}
+.big-btn .emoji{font-size:2.6rem;}
+.btn-kasse{background:var(--red);}
+.btn-produkte{background:var(--green);}
+.home-sub{
+  color:var(--brown-dark);
+  font-size:1.05rem;
+  margin-top:-6px;
+  font-weight:600;
+}
+
+.card{
+  background:var(--cream-2);
+  border-radius:var(--radius);
+  padding:18px;
+  box-shadow:0 3px 10px rgba(122,78,45,0.12);
+  margin-bottom:18px;
+}
+.section-title{
+  font-size:1.3rem;
+  font-weight:800;
+  margin:0 0 12px;
+  color:var(--brown-dark);
+}
+
+.form-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.form-row input, .form-row select{
+  font-family:'Nunito',sans-serif;
+  font-size:1.05rem;
+  padding:12px 14px;
+  border:2px solid #E4D3BC;
+  border-radius:14px;
+  background:#fff;
+  flex:1;
+  min-width:110px;
+}
+
+.photo-picker{
+  display:flex;align-items:center;gap:14px;margin-bottom:10px;
+}
+.photo-preview{
+  width:64px;height:64px;border-radius:14px;
+  background:#fff;border:2px solid #E4D3BC;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;overflow:hidden;flex-shrink:0;
+}
+.photo-preview img{width:100%;height:100%;object-fit:cover;}
+.photo-btn{
+  font-family:'Nunito',sans-serif;font-weight:700;
+  background:#fff;border:2px solid #E4D3BC;border-radius:14px;
+  padding:10px 14px;cursor:pointer;font-size:0.95rem;
+}
+.photo-btn.remove{border-color:var(--red);color:var(--red-dark);}
+
+.emoji-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.emoji-picker button{
+  font-size:1.5rem;
+  background:#fff;
+  border:2px solid #E4D3BC;
+  border-radius:12px;
+  padding:6px 8px;
+  cursor:pointer;
+}
+.emoji-picker button.selected{border-color:var(--yellow);background:#FFF2CE;}
+.add-btn{
+  font-family:'Baloo 2',sans-serif;
+  font-weight:700;
+  font-size:1.1rem;
+  background:var(--green);
+  color:#fff;
+  border:none;
+  border-radius:14px;
+  padding:12px 22px;
+  cursor:pointer;
+}
+.add-btn:active{transform:scale(0.97);}
+
+.product-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
+  gap:14px;
+}
+.product-card{
+  background:#fff;
+  border:2px solid #F0E3CC;
+  border-radius:16px;
+  padding:12px;
+  text-align:center;
+  position:relative;
+}
+.product-card .emoji{font-size:2.2rem;}
+.product-card .photo{width:56px;height:56px;border-radius:12px;object-fit:cover;}
+.product-card .pname{font-weight:800;margin:4px 0 2px;font-size:1.02rem;}
+.product-card .pprice{color:var(--red-dark);font-weight:800;font-family:'Baloo 2',sans-serif;font-size:1.1rem;}
+.product-card svg{margin-top:6px;max-width:100%;}
+.del-btn{
+  position:absolute;top:6px;right:6px;
+  background:var(--red);
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:26px;height:26px;
+  font-weight:800;
+  cursor:pointer;
+  line-height:1;
+}
+.print-btn{
+  background:var(--yellow);
+  color:var(--brown-dark);
+  border:none;
+  font-family:'Baloo 2',sans-serif;
+  font-weight:700;
+  border-radius:14px;
+  padding:10px 18px;
+  cursor:pointer;
+  margin-bottom:14px;
+}
+
+#reader{
+  width:100%;
+  max-width:420px;
+  margin:0 auto 14px;
+  border-radius:18px;
+  overflow:hidden;
+  border:4px solid var(--brown);
+}
+.scan-btn{
+  display:block;
+  margin:0 auto 16px;
+  font-family:'Baloo 2',sans-serif;
+  font-weight:800;
+  font-size:1.2rem;
+  background:var(--red);
+  color:#fff;
+  border:none;
+  border-radius:16px;
+  padding:14px 28px;
+  cursor:pointer;
+}
+.scan-flash{
+  text-align:center;
+  font-weight:800;
+  color:var(--green-dark);
+  min-height:1.4em;
+  margin-bottom:6px;
+}
+.manual-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(110px,1fr));
+  gap:10px;
+  margin-top:6px;
+}
+.manual-item{
+  background:#fff;
+  border:2px solid #F0E3CC;
+  border-radius:14px;
+  padding:10px 6px;
+  text-align:center;
+  cursor:pointer;
+  font-weight:700;
+}
+.manual-item .emoji{font-size:1.8rem;display:block;}
+.manual-item .photo{width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;margin:0 auto 4px;}
+.manual-item:active{background:#FFF2CE;}
+
+.cart-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px dashed #E4D3BC;
+}
+.cart-row .emoji{font-size:1.6rem;}
+.cart-row .photo{width:34px;height:34px;border-radius:8px;object-fit:cover;}
+.cart-row .name{flex:1;font-weight:700;}
+.cart-row .qty{
+  background:var(--cream);
+  border-radius:10px;
+  padding:2px 10px;
+  font-weight:800;
+}
+.cart-row .line-total{font-weight:800;color:var(--red-dark);min-width:70px;text-align:right;}
+.cart-row .rm{
+  background:none;border:none;color:var(--brown);font-size:1.2rem;cursor:pointer;
+}
+.total-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-top:14px;margin-top:6px;border-top:3px solid var(--brown);
+  font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.5rem;
+}
+.pay-btn{
+  display:block;width:100%;margin-top:16px;
+  background:var(--green);color:#fff;border:none;border-radius:16px;
+  font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.2rem;
+  padding:14px;cursor:pointer;
+}
+.pay-btn:disabled{background:#C9BBA6;cursor:not-allowed;}
+.empty-hint{color:#8A7458;font-weight:600;text-align:center;padding:20px 0;}
+
+.modal-bg{
+  position:fixed;inset:0;background:rgba(43,35,32,0.55);
+  display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+}
+.modal{
+  background:#fff;border-radius:24px;padding:26px;max-width:380px;width:100%;text-align:center;
+}
+.modal h2{margin-top:0;color:var(--brown-dark);}
+.modal input{
+  width:100%;font-size:1.4rem;text-align:center;padding:12px;border-radius:14px;
+  border:2px solid #E4D3BC;margin:12px 0;font-family:'Baloo 2',sans-serif;
+}
+.change-display{
+  font-family:'Baloo 2',sans-serif;font-size:1.6rem;font-weight:800;
+  color:var(--green-dark);margin:10px 0;
+}
+.modal-actions{display:flex;gap:10px;margin-top:14px;}
+.modal-actions button{
+  flex:1;border:none;border-radius:14px;padding:12px;font-weight:800;
+  font-family:'Baloo 2',sans-serif;cursor:pointer;
+}
+.modal-actions .cancel{background:#EFE6D6;color:var(--brown-dark);}
+.modal-actions .confirm{background:var(--green);color:#fff;}
+
+#printArea{display:none;}
+@media print{
+  body *{visibility:hidden;}
+  #printArea, #printArea *{visibility:visible;}
+  #printArea{
+    display:block;position:absolute;top:0;left:0;width:100%;
+    grid-template-columns:repeat(3, 1fr);
+    display:grid;gap:10px;
+  }
+  .label{
+    border:2px dashed #999;border-radius:10px;padding:8px;text-align:center;
+    page-break-inside:avoid;
+  }
+  .label .emoji{font-size:1.8rem;}
+  .label .photo{width:44px;height:44px;border-radius:8px;object-fit:cover;}
+  .label .lname{font-weight:800;font-size:0.95rem;}
+  .label .lprice{font-weight:800;}
+}
+</style>
+</head>
+<body>
+
+<div class="awning"></div>
+<div class="topbar">
+  <h1 id="screenTitle">🏪 Alinas Kaufladen</h1>
+  <button id="homeBtn" style="display:none;">🏠 Start</button>
+</div>
+
+<main id="app"></main>
+
+<div id="printArea"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"></script>
+
+<script>
+const EMOJI_CHOICES = ["🍎","🍌","🍊","🍇","🥕","🥦","🍞","🥛","🧀","🥚","🍫","🍪","🧃","🍅","🥔","🍕","🍦","🥫","🐟","🍗"];
+
+let products = [];
+let cart = [];
+let selectedEmoji = EMOJI_CHOICES[0];
+let currentPhoto = null;
+let scanner = null;
+let lastScan = {code:null, time:0};
+
+const app = document.getElementById('app');
+const screenTitle = document.getElementById('screenTitle');
+const homeBtn = document.getElementById('homeBtn');
+
+homeBtn.addEventListener('click', () => goHome());
+
+function beep(freq=880, dur=0.12){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + dur);
+  }catch(e){}
+}
+
+async function loadProducts(){
+  try{
+    const raw = localStorage.getItem('km_products');
+    products = raw ? JSON.parse(raw) : [];
+  }catch(e){
+    products = [];
+  }
+}
+async function saveProducts(){
+  try{
+    localStorage.setItem('km_products', JSON.stringify(products));
+  }catch(e){console.error('Speichern fehlgeschlagen', e);}
+}
+
+function resizeImageFile(file, maxSize=220, quality=0.7){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > h && w > maxSize){ h = Math.round(h * (maxSize/w)); w = maxSize; }
+        else if(h > maxSize){ w = Math.round(w * (maxSize/h)); h = maxSize; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function nextBarcode(){
+  let max = 100000;
+  products.forEach(p => { const n = parseInt(p.barcode,10); if(!isNaN(n) && n>max) max=n; });
+  return String(max+1);
+}
+
+async function stopScanner(){
+  if(scanner){
+    try{ await scanner.stop(); scanner.clear(); }catch(e){}
+    scanner = null;
+  }
+}
+
+async function goHome(){
+  await stopScanner();
+  screenTitle.textContent = "🏪 Alinas Kaufladen";
+  homeBtn.style.display = 'none';
+  app.innerHTML = `
+    <div class="home-grid">
+      <p class="home-sub">Was möchtest du machen?</p>
+      <button class="big-btn btn-kasse" id="goKasse"><span class="emoji">🧾</span> Kasse</button>
+      <button class="big-btn btn-produkte" id="goProdukte"><span class="emoji">📦</span> Produkte verwalten</button>
+    </div>
+  `;
+  document.getElementById('goKasse').addEventListener('click', renderKasse);
+  document.getElementById('goProdukte').addEventListener('click', renderProdukte);
+}
+
+function renderProdukte(){
+  screenTitle.textContent = "📦 Produkte";
+  homeBtn.style.display = 'inline-block';
+  currentPhoto = null;
+  app.innerHTML = `
+    <div class="card">
+      <h3 class="section-title">Neues Produkt</h3>
+      <div class="photo-picker">
+        <div class="photo-preview" id="photoPreview">${selectedEmoji}</div>
+        <button class="photo-btn" id="takePhotoBtn">📷 Foto aufnehmen/wählen</button>
+        <button class="photo-btn remove" id="removePhotoBtn" style="display:none;">Foto entfernen</button>
+        <input type="file" accept="image/*" capture="environment" id="photoInput" style="display:none;">
+      </div>
+      <p class="home-sub" style="font-size:0.9rem;margin:-4px 0 10px;">Oder wähle stattdessen ein Emoji:</p>
+      <div class="emoji-picker" id="emojiPicker"></div>
+      <div class="form-row">
+        <input id="pname" type="text" placeholder="Name (z.B. Apfel)">
+        <input id="pprice" type="number" step="0.01" min="0" placeholder="Preis in €">
+      </div>
+      <button class="add-btn" id="addProduct">➕ Hinzufügen</button>
+    </div>
+    <div class="card">
+      <button class="print-btn" id="printLabels">🖨️ Alle Etiketten drucken</button>
+      <h3 class="section-title">Produkte (${products.length})</h3>
+      <div class="product-list" id="productList"></div>
+    </div>
+  `;
+
+  const picker = document.getElementById('emojiPicker');
+  EMOJI_CHOICES.forEach(em => {
+    const b = document.createElement('button');
+    b.textContent = em;
+    if(em === selectedEmoji) b.classList.add('selected');
+    b.addEventListener('click', () => {
+      selectedEmoji = em;
+      picker.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected');
+      if(!currentPhoto){
+        document.getElementById('photoPreview').innerHTML = em;
+      }
+    });
+    picker.appendChild(b);
+  });
+
+  const photoInput = document.getElementById('photoInput');
+  const photoPreview = document.getElementById('photoPreview');
+  const removePhotoBtn = document.getElementById('removePhotoBtn');
+
+  document.getElementById('takePhotoBtn').addEventListener('click', () => photoInput.click());
+  photoInput.addEventListener('change', async () => {
+    const file = photoInput.files[0];
+    if(!file) return;
+    try{
+      currentPhoto = await resizeImageFile(file);
+      photoPreview.innerHTML = `<img src="${currentPhoto}">`;
+      removePhotoBtn.style.display = 'inline-block';
+    }catch(e){
+      alert('Foto konnte nicht geladen werden.');
+    }
+  });
+  removePhotoBtn.addEventListener('click', () => {
+    currentPhoto = null;
+    photoInput.value = '';
+    photoPreview.innerHTML = selectedEmoji;
+    removePhotoBtn.style.display = 'none';
+  });
+
+  document.getElementById('addProduct').addEventListener('click', async () => {
+    const name = document.getElementById('pname').value.trim();
+    const price = parseFloat(document.getElementById('pprice').value);
+    if(!name || isNaN(price) || price < 0){
+      alert('Bitte Name und gültigen Preis eingeben.');
+      return;
+    }
+    const product = {
+      id: 'p_' + Date.now(),
+      name, price,
+      emoji: selectedEmoji,
+      photo: currentPhoto,
+      barcode: nextBarcode()
+    };
+    products.push(product);
+    await saveProducts();
+    currentPhoto = null;
+    renderProdukte();
+  });
+
+  document.getElementById('printLabels').addEventListener('click', () => {
+    buildPrintArea();
+    window.print();
+  });
+
+  renderProductList();
+}
+
+function renderProductList(){
+  const list = document.getElementById('productList');
+  if(!list) return;
+  list.innerHTML = '';
+  if(products.length === 0){
+    list.innerHTML = '<p class="empty-hint">Noch keine Produkte. Füge oben eines hinzu!</p>';
+    return;
+  }
+  products.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.innerHTML = `
+      <button class="del-btn" data-id="${p.id}">✕</button>
+      ${p.photo ? `<img class="photo" src="${p.photo}">` : `<div class="emoji">${p.emoji}</div>`}
+      <div class="pname">${escapeHtml(p.name)}</div>
+      <div class="pprice">${p.price.toFixed(2)} €</div>
+      <svg class="barcode" data-code="${p.barcode}"></svg>
+    `;
+    list.appendChild(card);
+  });
+  list.querySelectorAll('.barcode').forEach(svg => {
+    JsBarcode(svg, svg.dataset.code, {format:"CODE128", width:2, height:40, displayValue:true, fontSize:12, margin:4});
+  });
+  list.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(confirm('Dieses Produkt wirklich löschen?')){
+        products = products.filter(p => p.id !== btn.dataset.id);
+        await saveProducts();
+        renderProductList();
+      }
+    });
+  });
+}
+
+function buildPrintArea(){
+  const area = document.getElementById('printArea');
+  area.innerHTML = '';
+  products.forEach(p => {
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.innerHTML = `
+      ${p.photo ? `<img class="photo" src="${p.photo}">` : `<div class="emoji">${p.emoji}</div>`}
+      <div class="lname">${escapeHtml(p.name)}</div>
+      <div class="lprice">${p.price.toFixed(2)} €</div>
+      <svg class="pbarcode" data-code="${p.barcode}"></svg>
+    `;
+    area.appendChild(label);
+  });
+  area.querySelectorAll('.pbarcode').forEach(svg => {
+    JsBarcode(svg, svg.dataset.code, {format:"CODE128", width:2, height:36, displayValue:true, fontSize:11, margin:2});
+  });
+}
+
+function renderKasse(){
+  screenTitle.textContent = "🧾 Kasse";
+  homeBtn.style.display = 'inline-block';
+  cart = [];
+  app.innerHTML = `
+    <button class="scan-btn" id="toggleScan">📷 Scannen starten</button>
+    <div id="reader" style="display:none;"></div>
+    <div class="scan-flash" id="scanFlash"></div>
+
+    <div class="card">
+      <h3 class="section-title">Warenkorb</h3>
+      <div id="cartList"></div>
+      <div class="total-row">
+        <span>Gesamt</span>
+        <span id="cartTotal">0,00 €</span>
+      </div>
+      <button class="pay-btn" id="payBtn" disabled>💶 Bezahlen</button>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Oder von Hand hinzufügen</h3>
+      <div class="manual-grid" id="manualGrid"></div>
+    </div>
+  `;
+
+  document.getElementById('toggleScan').addEventListener('click', toggleScan);
+  document.getElementById('payBtn').addEventListener('click', openPayModal);
+
+  const grid = document.getElementById('manualGrid');
+  if(products.length === 0){
+    grid.innerHTML = '<p class="empty-hint">Noch keine Produkte angelegt.</p>';
+  }else{
+    products.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'manual-item';
+      item.innerHTML = `${p.photo ? `<img class="photo" src="${p.photo}">` : `<span class="emoji">${p.emoji}</span>`}${escapeHtml(p.name)}<br>${p.price.toFixed(2)} €`;
+      item.addEventListener('click', () => addToCart(p));
+      grid.appendChild(item);
+    });
+  }
+
+  renderCart();
+}
+
+async function toggleScan(){
+  const readerDiv = document.getElementById('reader');
+  const btn = document.getElementById('toggleScan');
+  if(scanner){
+    await stopScanner();
+    readerDiv.style.display = 'none';
+    btn.textContent = '📷 Scannen starten';
+    return;
+  }
+  readerDiv.style.display = 'block';
+  btn.textContent = '⏹️ Scannen stoppen';
+  scanner = new Html5Qrcode("reader");
+  const config = {
+    fps: 10,
+    qrbox: { width: 260, height: 140 },
+    formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ]
+  };
+  try{
+    await scanner.start({ facingMode: "environment" }, config, onScanSuccess, () => {});
+  }catch(e){
+    document.getElementById('scanFlash').textContent = 'Kamera konnte nicht gestartet werden.';
+    btn.textContent = '📷 Scannen starten';
+    scanner = null;
+    readerDiv.style.display = 'none';
+  }
+}
+
+function onScanSuccess(decodedText){
+  const now = Date.now();
+  if(decodedText === lastScan.code && now - lastScan.time < 1500) return;
+  lastScan = {code: decodedText, time: now};
+  const product = products.find(p => p.barcode === decodedText);
+  const flash = document.getElementById('scanFlash');
+  if(product){
+    beep(880, 0.1);
+    addToCart(product);
+    flash.textContent = `✅ ${product.emoji} ${product.name} hinzugefügt`;
+  }else{
+    beep(220, 0.2);
+    flash.textContent = `❓ Unbekannter Code: ${decodedText}`;
+  }
+  setTimeout(() => { flash.textContent = ''; }, 1800);
+}
+
+function addToCart(product){
+  const existing = cart.find(c => c.productId === product.id);
+  if(existing){
+    existing.qty += 1;
+  }else{
+    cart.push({productId: product.id, name: product.name, price: product.price, emoji: product.emoji, photo: product.photo, qty: 1});
+  }
+  renderCart();
+}
+
+function renderCart(){
+  const list = document.getElementById('cartList');
+  const totalEl = document.getElementById('cartTotal');
+  const payBtn = document.getElementById('payBtn');
+  if(!list) return;
+  list.innerHTML = '';
+  if(cart.length === 0){
+    list.innerHTML = '<p class="empty-hint">Noch nichts im Warenkorb. Scanne ein Produkt!</p>';
+  }
+  let total = 0;
+  cart.forEach((c, idx) => {
+    const lineTotal = c.price * c.qty;
+    total += lineTotal;
+    const row = document.createElement('div');
+    row.className = 'cart-row';
+    row.innerHTML = `
+      ${c.photo ? `<img class="photo" src="${c.photo}">` : `<span class="emoji">${c.emoji}</span>`}
+      <span class="name">${escapeHtml(c.name)}</span>
+      <span class="qty">×${c.qty}</span>
+      <span class="line-total">${lineTotal.toFixed(2)} €</span>
+      <button class="rm" data-idx="${idx}">🗑️</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.rm').forEach(btn => {
+    btn.addEventListener('click', () => {
+      cart.splice(parseInt(btn.dataset.idx,10), 1);
+      renderCart();
+    });
+  });
+  totalEl.textContent = total.toFixed(2).replace('.', ',') + ' €';
+  payBtn.disabled = cart.length === 0;
+  payBtn.dataset.total = total.toFixed(2);
+}
+
+function openPayModal(){
+  const total = parseFloat(document.getElementById('payBtn').dataset.total || '0');
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `
+    <div class="modal">
+      <h2>💶 Bezahlen</h2>
+      <p>Zu zahlen: <strong>${total.toFixed(2).replace('.', ',')} €</strong></p>
+      <input type="number" step="0.01" min="0" id="paidInput" placeholder="Gegeben (€)">
+      <div class="change-display" id="changeDisplay"></div>
+      <div class="modal-actions">
+        <button class="cancel" id="cancelPay">Abbrechen</button>
+        <button class="confirm" id="confirmPay">Fertig ✅</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(bg);
+  const input = document.getElementById('paidInput');
+  const changeDisplay = document.getElementById('changeDisplay');
+  input.addEventListener('input', () => {
+    const paid = parseFloat(input.value);
+    if(isNaN(paid)){ changeDisplay.textContent=''; return; }
+    const change = paid - total;
+    changeDisplay.textContent = change >= 0
+      ? `Rückgeld: ${change.toFixed(2).replace('.', ',')} €`
+      : `Es fehlen noch ${Math.abs(change).toFixed(2).replace('.', ',')} €`;
+  });
+  document.getElementById('cancelPay').addEventListener('click', () => bg.remove());
+  document.getElementById('confirmPay').addEventListener('click', () => {
+    bg.remove();
+    cart = [];
+    renderCart();
+    const flash = document.getElementById('scanFlash');
+    if(flash){ flash.textContent = '🎉 Kauf abgeschlossen! Nächster Kunde bitte.'; setTimeout(()=>flash.textContent='',2500); }
+  });
+  input.focus();
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+(async function init(){
+  await loadProducts();
+  goHome();
+})();
+</script>
+</body>
+</html>
