@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Alinas Kaufladen</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
-
 :root{
   --cream:#FFF8EC;
   --cream-2:#FFFDF8;
@@ -24,13 +22,13 @@
 html,body{margin:0;padding:0;}
 body{
   background:var(--cream);
-  font-family:'Nunito',sans-serif;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
   color:var(--ink);
   min-height:100vh;
   -webkit-tap-highlight-color:transparent;
   user-select:none;
 }
-h1,h2,h3,.display{font-family:'Baloo 2',sans-serif;}
+h1,h2,h3,.display{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;}
 
 .awning{
   height:26px;
@@ -54,7 +52,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',sans-serif;}
 }
 .topbar .right-slot{display:flex;gap:8px;}
 .topbar button{
-  font-family:'Baloo 2',sans-serif;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
   font-weight:700;
   font-size:1rem;
   background:var(--cream-2);
@@ -81,7 +79,7 @@ main{
   border:none;
   border-radius:28px;
   padding:34px 20px;
-  font-family:'Baloo 2',sans-serif;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
   font-weight:800;
   font-size:1.6rem;
   color:#fff;
@@ -124,7 +122,7 @@ main{
   margin-bottom:10px;
 }
 .form-row input, .form-row select{
-  font-family:'Nunito',sans-serif;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
   font-size:1.05rem;
   padding:12px 14px;
   border:2px solid #E4D3BC;
@@ -145,7 +143,7 @@ main{
 }
 .photo-preview img{width:100%;height:100%;object-fit:cover;}
 .photo-btn{
-  font-family:'Nunito',sans-serif;font-weight:700;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:700;
   background:#fff;border:2px solid #E4D3BC;border-radius:14px;
   padding:10px 14px;cursor:pointer;font-size:0.95rem;
 }
@@ -162,7 +160,7 @@ main{
 }
 .emoji-picker button.selected{border-color:var(--yellow);background:#FFF2CE;}
 .add-btn{
-  font-family:'Baloo 2',sans-serif;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
   font-weight:700;
   font-size:1.1rem;
   background:var(--green);
@@ -190,7 +188,7 @@ main{
 .product-card .emoji{font-size:2.2rem;}
 .product-card .photo{width:56px;height:56px;border-radius:12px;object-fit:cover;}
 .product-card .pname{font-weight:800;margin:4px 0 2px;font-size:1.02rem;}
-.product-card .pprice{color:var(--red-dark);font-weight:800;font-family:'Baloo 2',sans-serif;font-size:1.1rem;}
+.product-card .pprice{color:var(--red-dark);font-weight:800;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:1.1rem;}
 .product-card .pcode{font-size:0.8rem;color:#8A7458;margin-top:2px;}
 .del-btn{
   position:absolute;top:6px;right:6px;
@@ -207,7 +205,7 @@ main{
   background:var(--yellow);
   color:var(--brown-dark);
   border:none;
-  font-family:'Baloo 2',sans-serif;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
   font-weight:700;
   border-radius:14px;
   padding:10px 18px;
@@ -218,15 +216,18 @@ main{
 #reader{
   width:100%;
   max-width:340px;
+  height:280px;
   margin:0 auto 14px;
   border-radius:18px;
   overflow:hidden;
   border:4px solid var(--brown);
+  background:#000;
 }
+#reader video{width:100%;height:100%;object-fit:cover;display:block;}
 .scan-btn{
   display:block;
   margin:0 auto 16px;
-  font-family:'Baloo 2',sans-serif;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
   font-weight:800;
   font-size:1.2rem;
   background:var(--red);
@@ -286,12 +287,12 @@ main{
 .total-row{
   display:flex;justify-content:space-between;align-items:center;
   padding-top:14px;margin-top:6px;border-top:3px solid var(--brown);
-  font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.5rem;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:800;font-size:1.5rem;
 }
 .pay-btn{
   display:block;width:100%;margin-top:16px;
   background:var(--green);color:#fff;border:none;border-radius:16px;
-  font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.2rem;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:800;font-size:1.2rem;
   padding:14px;cursor:pointer;
 }
 .pay-btn:disabled{background:#C9BBA6;cursor:not-allowed;}
@@ -307,16 +308,16 @@ main{
 .modal h2{margin-top:0;color:var(--brown-dark);}
 .modal input{
   width:100%;font-size:1.4rem;text-align:center;padding:12px;border-radius:14px;
-  border:2px solid #E4D3BC;margin:12px 0;font-family:'Baloo 2',sans-serif;
+  border:2px solid #E4D3BC;margin:12px 0;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
 }
 .change-display{
-  font-family:'Baloo 2',sans-serif;font-size:1.6rem;font-weight:800;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:1.6rem;font-weight:800;
   color:var(--green-dark);margin:10px 0;
 }
 .modal-actions{display:flex;gap:10px;margin-top:14px;}
 .modal-actions button{
   flex:1;border:none;border-radius:14px;padding:12px;font-weight:800;
-  font-family:'Baloo 2',sans-serif;cursor:pointer;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;cursor:pointer;
 }
 .modal-actions .cancel{background:#EFE6D6;color:var(--brown-dark);}
 .modal-actions .confirm{background:var(--green);color:#fff;}
@@ -335,8 +336,6 @@ main{
 
 <main id="app"></main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-
 <script>
 const EMOJI_CHOICES = ["🍎","🍌","🍊","🍇","🥕","🥦","🍞","🥛","🧀","🥚","🍫","🍪","🧃","🍅","🥔","🍕","🍦","🥫","🐟","🍗"];
 const ADMIN_PIN = "2302";
@@ -347,8 +346,13 @@ let cart = [];
 let shoppingList = [];
 let selectedEmoji = EMOJI_CHOICES[0];
 let currentPhoto = null;
+let totalRevenue = 0;
 let scanner = null;
-let lastScan = {code:null, time:0};
+let scanVideo = null;
+let scanStream = null;
+let scanLoopActive = false;
+let activeCode = null;
+let lastSeenTime = 0;
 
 const app = document.getElementById('app');
 const screenTitle = document.getElementById('screenTitle');
@@ -394,6 +398,15 @@ async function saveCards(){
   catch(e){ console.error('Speichern fehlgeschlagen', e); }
 }
 
+async function loadRevenue(){
+  try{ totalRevenue = parseFloat(localStorage.getItem('km_revenue')) || 0; }
+  catch(e){ totalRevenue = 0; }
+}
+async function saveRevenue(){
+  try{ localStorage.setItem('km_revenue', String(totalRevenue)); }
+  catch(e){ console.error('Speichern fehlgeschlagen', e); }
+}
+
 function resizeImageFile(file, maxSize=220, quality=0.7){
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -418,10 +431,13 @@ function resizeImageFile(file, maxSize=220, quality=0.7){
 }
 
 async function stopScanner(){
-  if(scanner){
-    try{ await scanner.stop(); scanner.clear(); }catch(e){}
-    scanner = null;
+  scanLoopActive = false;
+  if(scanStream){
+    scanStream.getTracks().forEach(t => t.stop());
+    scanStream = null;
   }
+  scanVideo = null;
+  activeCode = null;
 }
 
 function escapeHtml(str){
@@ -525,6 +541,15 @@ function renderVerwaltung(){
       <h3 class="section-title">Bankkarten (${cards.length})</h3>
       <div id="cardList"></div>
     </div>
+
+    <div class="card">
+      <h3 class="section-title">📊 Kassenbericht</h3>
+      <div class="total-row" style="border-top:none;padding-top:0;">
+        <span>Gesamteinnahmen</span>
+        <span id="revenueDisplay">${totalRevenue.toFixed(2).replace('.', ',')} €</span>
+      </div>
+      <button class="photo-btn remove" id="resetRevenue" style="margin-top:10px;">Zurücksetzen</button>
+    </div>
   `;
 
   const picker = document.getElementById('emojiPicker');
@@ -604,6 +629,14 @@ function renderVerwaltung(){
     renderCardList();
     const cardTitles = app.querySelectorAll('.section-title');
     if(cardTitles[3]) cardTitles[3].textContent = `Bankkarten (${cards.length})`;
+  });
+
+  document.getElementById('resetRevenue').addEventListener('click', async () => {
+    if(confirm('Kassenbericht wirklich auf 0 € zurücksetzen?')){
+      totalRevenue = 0;
+      await saveRevenue();
+      document.getElementById('revenueDisplay').textContent = '0,00 €';
+    }
   });
 
   renderProductList();
@@ -744,7 +777,7 @@ function renderKasse(){
         <span id="cartTotal">0,00 €</span>
       </div>
       <button class="pay-btn" id="payBtn" disabled>💶 Bar bezahlen</button>
-      <button class="photo-btn" id="manualCardBtn" style="margin-top:10px;width:100%;">💳 Karten-Code manuell eingeben</button>
+      <button class="photo-btn" id="cardPayBtn" style="margin-top:10px;width:100%;">💳 Mit Karte bezahlen</button>
     </div>
 
     <div class="card">
@@ -755,7 +788,7 @@ function renderKasse(){
 
   document.getElementById('toggleScan').addEventListener('click', toggleScan);
   document.getElementById('payBtn').addEventListener('click', openPayModal);
-  document.getElementById('manualCardBtn').addEventListener('click', openManualCardModal);
+  document.getElementById('cardPayBtn').addEventListener('click', () => startScanIfNeeded('📷 Bankkarte vor die Kamera halten...'));
 
   const grid = document.getElementById('manualGrid');
   if(products.length === 0){
@@ -776,35 +809,75 @@ function renderKasse(){
 async function toggleScan(){
   const readerDiv = document.getElementById('reader');
   const btn = document.getElementById('toggleScan');
-  if(scanner){
+  const flash = document.getElementById('scanFlash');
+
+  if(scanLoopActive){
     await stopScanner();
     readerDiv.style.display = 'none';
+    readerDiv.innerHTML = '';
     btn.textContent = '📷 Scannen starten';
     return;
   }
+
+  if(!('BarcodeDetector' in window)){
+    if(flash) flash.textContent = 'Dieses Gerät unterstützt die eingebaute QR-Erkennung leider nicht. Bitte "Android System WebView" im Play Store aktualisieren, oder Produkte von Hand hinzufügen.';
+    return;
+  }
+
   readerDiv.style.display = 'block';
   btn.textContent = '⏹️ Scannen stoppen';
-  scanner = new Html5Qrcode("reader");
-  const config = {
-    fps: 10,
-    qrbox: { width: 250, height: 250 },
-    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
-  };
+
   try{
-    await scanner.start({ facingMode: "environment" }, config, onScanSuccess, () => {});
+    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+    scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    scanVideo = document.createElement('video');
+    scanVideo.setAttribute('playsinline', '');
+    scanVideo.muted = true;
+    scanVideo.autoplay = true;
+    readerDiv.innerHTML = '';
+    readerDiv.appendChild(scanVideo);
+    scanVideo.srcObject = scanStream;
+    await scanVideo.play();
+
+    scanLoopActive = true;
+    activeCode = null;
+    lastSeenTime = 0;
+
+    const loop = async () => {
+      if(!scanLoopActive) return;
+      if(scanVideo && scanVideo.readyState >= 2){
+        try{
+          const results = await detector.detect(scanVideo);
+          const now = Date.now();
+          if(results.length > 0){
+            lastSeenTime = now;
+            const text = results[0].rawValue;
+            // Nur auslösen, wenn sich der erkannte Code geändert hat -
+            // solange derselbe Code im Bild bleibt, passiert nichts weiter.
+            if(text !== activeCode){
+              activeCode = text;
+              handleScannedCode(text);
+            }
+          }else if(activeCode && now - lastSeenTime > 600){
+            // Kein Code mehr seit 600ms im Bild -> Code gilt als "entfernt",
+            // ein erneutes Zeigen (auch desselben Codes) darf wieder auslösen.
+            activeCode = null;
+          }
+        }catch(e){ /* einzelner Frame fehlgeschlagen, einfach weiterversuchen */ }
+      }
+      if(scanLoopActive) requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+
   }catch(e){
-    document.getElementById('scanFlash').textContent = 'Kamera konnte nicht gestartet werden.';
+    if(flash) flash.textContent = 'Kamera konnte nicht gestartet werden.';
     btn.textContent = '📷 Scannen starten';
-    scanner = null;
+    scanLoopActive = false;
     readerDiv.style.display = 'none';
   }
 }
 
-function onScanSuccess(decodedText){
-  const now = Date.now();
-  if(decodedText === lastScan.code && now - lastScan.time < 1500) return;
-  lastScan = {code: decodedText, time: now};
-
+function handleScannedCode(decodedText){
   const card = cards.find(c => c.code === decodedText);
   if(card){
     attemptCardPayment(decodedText);
@@ -891,10 +964,12 @@ function openPayModal(){
       : `Es fehlen noch ${Math.abs(change).toFixed(2).replace('.', ',')} €`;
   });
   document.getElementById('cancelPay').addEventListener('click', () => bg.remove());
-  document.getElementById('confirmPay').addEventListener('click', () => {
+  document.getElementById('confirmPay').addEventListener('click', async () => {
     bg.remove();
     cart = [];
     renderCart();
+    totalRevenue += total;
+    await saveRevenue();
     const flash = document.getElementById('scanFlash');
     if(flash){ flash.textContent = '🎉 Kauf abgeschlossen! Nächster Kunde bitte.'; setTimeout(()=>flash.textContent='',2500); }
   });
@@ -921,40 +996,71 @@ async function attemptCardPayment(code){
     beep(880, 0.15);
     cart = [];
     renderCart();
-    alert(`💳 Mit Karte bezahlt!\nAlt: ${oldBalance.toFixed(2)} €\nBezahlt: ${total.toFixed(2)} €\nNeues Guthaben: ${card.balance.toFixed(2)} €`);
+    totalRevenue += total;
+    await saveRevenue();
+    showPaymentSuccessModal(oldBalance, total, card.balance);
     if(flash){ flash.textContent = '🎉 Mit Karte bezahlt! Nächster Kunde bitte.'; setTimeout(()=>flash.textContent='',2500); }
   }else{
     beep(220, 0.25);
-    alert(`❌ Nicht genug Guthaben!\nEinkauf kostet: ${total.toFixed(2)} €\nKarte hat nur: ${card.balance.toFixed(2)} €`);
+    showPaymentFailModal(total, card.balance);
   }
 }
 
-function openManualCardModal(){
+function showPaymentSuccessModal(oldBalance, paid, newBalance){
   const bg = document.createElement('div');
   bg.className = 'modal-bg';
   bg.innerHTML = `
     <div class="modal">
-      <h2>💳 Karten-Code eingeben</h2>
-      <input type="text" id="manualCardInput" placeholder="Karten-Nummer">
+      <h2>💳 Bezahlt!</h2>
+      <div class="change-display">- ${paid.toFixed(2).replace('.', ',')} €</div>
+      <div style="display:flex;justify-content:space-between;margin:14px 0 6px;font-weight:700;color:var(--brown-dark);">
+        <span>Altes Guthaben</span><span>${oldBalance.toFixed(2).replace('.', ',')} €</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:14px;font-weight:800;font-size:1.3rem;color:var(--green-dark);">
+        <span>Neues Guthaben</span><span>${newBalance.toFixed(2).replace('.', ',')} €</span>
+      </div>
       <div class="modal-actions">
-        <button class="cancel" id="manualCardCancel">Abbrechen</button>
-        <button class="confirm" id="manualCardOk">Bezahlen</button>
+        <button class="confirm" id="closePayModal">Weiter</button>
       </div>
     </div>
   `;
   document.body.appendChild(bg);
-  document.getElementById('manualCardInput').focus();
-  document.getElementById('manualCardCancel').addEventListener('click', () => bg.remove());
-  document.getElementById('manualCardOk').addEventListener('click', async () => {
-    const code = document.getElementById('manualCardInput').value.trim();
-    bg.remove();
-    if(code) await attemptCardPayment(code);
-  });
+  document.getElementById('closePayModal').addEventListener('click', () => bg.remove());
+}
+
+function showPaymentFailModal(total, balance){
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `
+    <div class="modal">
+      <h2>❌ Nicht genug Guthaben</h2>
+      <div style="display:flex;justify-content:space-between;margin:14px 0 6px;font-weight:700;color:var(--brown-dark);">
+        <span>Einkauf kostet</span><span>${total.toFixed(2).replace('.', ',')} €</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:14px;font-weight:800;color:var(--red-dark);">
+        <span>Karte hat nur</span><span>${balance.toFixed(2).replace('.', ',')} €</span>
+      </div>
+      <div class="modal-actions">
+        <button class="cancel" id="closeFailModal">Schließen</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(bg);
+  document.getElementById('closeFailModal').addEventListener('click', () => bg.remove());
+}
+
+async function startScanIfNeeded(hintText){
+  const flash = document.getElementById('scanFlash');
+  if(!scanLoopActive){
+    await toggleScan();
+  }
+  if(flash && hintText) flash.textContent = hintText;
 }
 
 (async function init(){
   await loadProducts();
   await loadCards();
+  await loadRevenue();
   goHome();
 })();
 </script>
