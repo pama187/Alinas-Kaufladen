@@ -52,6 +52,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',sans-serif;}
   font-weight:800;
   letter-spacing:0.5px;
 }
+.topbar .right-slot{display:flex;gap:8px;}
 .topbar button{
   font-family:'Baloo 2',sans-serif;
   font-weight:700;
@@ -134,7 +135,7 @@ main{
 }
 
 .photo-picker{
-  display:flex;align-items:center;gap:14px;margin-bottom:10px;
+  display:flex;align-items:center;gap:14px;margin-bottom:10px;flex-wrap:wrap;
 }
 .photo-preview{
   width:64px;height:64px;border-radius:14px;
@@ -190,7 +191,7 @@ main{
 .product-card .photo{width:56px;height:56px;border-radius:12px;object-fit:cover;}
 .product-card .pname{font-weight:800;margin:4px 0 2px;font-size:1.02rem;}
 .product-card .pprice{color:var(--red-dark);font-weight:800;font-family:'Baloo 2',sans-serif;font-size:1.1rem;}
-.product-card svg{margin-top:6px;max-width:100%;}
+.product-card .pcode{font-size:0.8rem;color:#8A7458;margin-top:2px;}
 .del-btn{
   position:absolute;top:6px;right:6px;
   background:var(--red);
@@ -216,7 +217,7 @@ main{
 
 #reader{
   width:100%;
-  max-width:420px;
+  max-width:340px;
   margin:0 auto 14px;
   border-radius:18px;
   overflow:hidden;
@@ -268,6 +269,7 @@ main{
   padding:8px 0;
   border-bottom:1px dashed #E4D3BC;
 }
+.cart-row.liste-done{background:#E8F5E9;opacity:0.7;text-decoration:line-through;border-radius:10px;padding-left:6px;}
 .cart-row .emoji{font-size:1.6rem;}
 .cart-row .photo{width:34px;height:34px;border-radius:8px;object-fit:cover;}
 .cart-row .name{flex:1;font-weight:700;}
@@ -318,25 +320,6 @@ main{
 }
 .modal-actions .cancel{background:#EFE6D6;color:var(--brown-dark);}
 .modal-actions .confirm{background:var(--green);color:#fff;}
-
-#printArea{display:none;}
-@media print{
-  body *{visibility:hidden;}
-  #printArea, #printArea *{visibility:visible;}
-  #printArea{
-    display:block;position:absolute;top:0;left:0;width:100%;
-    grid-template-columns:repeat(3, 1fr);
-    display:grid;gap:10px;
-  }
-  .label{
-    border:2px dashed #999;border-radius:10px;padding:8px;text-align:center;
-    page-break-inside:avoid;
-  }
-  .label .emoji{font-size:1.8rem;}
-  .label .photo{width:44px;height:44px;border-radius:8px;object-fit:cover;}
-  .label .lname{font-weight:800;font-size:0.95rem;}
-  .label .lprice{font-weight:800;}
-}
 </style>
 </head>
 <body>
@@ -344,21 +327,24 @@ main{
 <div class="awning"></div>
 <div class="topbar">
   <h1 id="screenTitle">🏪 Alinas Kaufladen</h1>
-  <button id="homeBtn" style="display:none;">🏠 Start</button>
+  <div class="right-slot">
+    <button id="settingsBtn" style="display:none;">⚙️</button>
+    <button id="homeBtn" style="display:none;">🏠 Start</button>
+  </div>
 </div>
 
 <main id="app"></main>
 
-<div id="printArea"></div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"></script>
 
 <script>
 const EMOJI_CHOICES = ["🍎","🍌","🍊","🍇","🥕","🥦","🍞","🥛","🧀","🥚","🍫","🍪","🧃","🍅","🥔","🍕","🍦","🥫","🐟","🍗"];
+const ADMIN_PIN = "2302";
 
 let products = [];
+let cards = [];
 let cart = [];
+let shoppingList = [];
 let selectedEmoji = EMOJI_CHOICES[0];
 let currentPhoto = null;
 let scanner = null;
@@ -367,8 +353,10 @@ let lastScan = {code:null, time:0};
 const app = document.getElementById('app');
 const screenTitle = document.getElementById('screenTitle');
 const homeBtn = document.getElementById('homeBtn');
+const settingsBtn = document.getElementById('settingsBtn');
 
 homeBtn.addEventListener('click', () => goHome());
+settingsBtn.addEventListener('click', () => openPinPrompt());
 
 function beep(freq=880, dur=0.12){
   try{
@@ -388,14 +376,22 @@ async function loadProducts(){
   try{
     const raw = localStorage.getItem('km_products');
     products = raw ? JSON.parse(raw) : [];
-  }catch(e){
-    products = [];
-  }
+  }catch(e){ products = []; }
 }
 async function saveProducts(){
+  try{ localStorage.setItem('km_products', JSON.stringify(products)); }
+  catch(e){ console.error('Speichern fehlgeschlagen', e); }
+}
+
+async function loadCards(){
   try{
-    localStorage.setItem('km_products', JSON.stringify(products));
-  }catch(e){console.error('Speichern fehlgeschlagen', e);}
+    const raw = localStorage.getItem('km_cards');
+    cards = raw ? JSON.parse(raw) : [];
+  }catch(e){ cards = []; }
+}
+async function saveCards(){
+  try{ localStorage.setItem('km_cards', JSON.stringify(cards)); }
+  catch(e){ console.error('Speichern fehlgeschlagen', e); }
 }
 
 function resizeImageFile(file, maxSize=220, quality=0.7){
@@ -421,12 +417,6 @@ function resizeImageFile(file, maxSize=220, quality=0.7){
   });
 }
 
-function nextBarcode(){
-  let max = 100000;
-  products.forEach(p => { const n = parseInt(p.barcode,10); if(!isNaN(n) && n>max) max=n; });
-  return String(max+1);
-}
-
 async function stopScanner(){
   if(scanner){
     try{ await scanner.stop(); scanner.clear(); }catch(e){}
@@ -434,24 +424,69 @@ async function stopScanner(){
   }
 }
 
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function getCartTotal(){
+  return cart.reduce((sum, c) => sum + c.price * c.qty, 0);
+}
+
+/* ---------- HOME ---------- */
 async function goHome(){
   await stopScanner();
   screenTitle.textContent = "🏪 Alinas Kaufladen";
   homeBtn.style.display = 'none';
+  settingsBtn.style.display = 'inline-block';
   app.innerHTML = `
     <div class="home-grid">
       <p class="home-sub">Was möchtest du machen?</p>
-      <button class="big-btn btn-kasse" id="goKasse"><span class="emoji">🧾</span> Kasse</button>
-      <button class="big-btn btn-produkte" id="goProdukte"><span class="emoji">📦</span> Produkte verwalten</button>
+      <button class="big-btn btn-produkte" id="goListe"><span class="emoji">🛒</span> Einkaufsliste</button>
+      <button class="big-btn btn-kasse" id="goKasseBtn"><span class="emoji">🧾</span> Kasse</button>
     </div>
   `;
-  document.getElementById('goKasse').addEventListener('click', renderKasse);
-  document.getElementById('goProdukte').addEventListener('click', renderProdukte);
+  document.getElementById('goListe').addEventListener('click', renderListe);
+  document.getElementById('goKasseBtn').addEventListener('click', renderKasse);
 }
 
-function renderProdukte(){
-  screenTitle.textContent = "📦 Produkte";
+/* ---------- PIN / VERWALTUNG ---------- */
+function openPinPrompt(){
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `
+    <div class="modal">
+      <h2>🔒 Eltern-Bereich</h2>
+      <p>Bitte PIN eingeben:</p>
+      <input type="password" inputmode="numeric" maxlength="4" id="pinInput" placeholder="PIN">
+      <div class="modal-actions">
+        <button class="cancel" id="pinCancel">Abbrechen</button>
+        <button class="confirm" id="pinOk">OK</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(bg);
+  const input = document.getElementById('pinInput');
+  input.focus();
+  document.getElementById('pinCancel').addEventListener('click', () => bg.remove());
+  const tryPin = () => {
+    if(input.value === ADMIN_PIN){
+      bg.remove();
+      renderVerwaltung();
+    }else{
+      input.value = '';
+      input.placeholder = 'Falsch, nochmal!';
+    }
+  };
+  document.getElementById('pinOk').addEventListener('click', tryPin);
+  input.addEventListener('keydown', (e) => { if(e.key === 'Enter') tryPin(); });
+}
+
+function renderVerwaltung(){
+  screenTitle.textContent = "⚙️ Verwaltung";
   homeBtn.style.display = 'inline-block';
+  settingsBtn.style.display = 'none';
   currentPhoto = null;
   app.innerHTML = `
     <div class="card">
@@ -467,13 +502,28 @@ function renderProdukte(){
       <div class="form-row">
         <input id="pname" type="text" placeholder="Name (z.B. Apfel)">
         <input id="pprice" type="number" step="0.01" min="0" placeholder="Preis in €">
+        <input id="pcode" type="text" placeholder="QR-Nummer (z.B. 123)">
       </div>
       <button class="add-btn" id="addProduct">➕ Hinzufügen</button>
     </div>
+
     <div class="card">
-      <button class="print-btn" id="printLabels">🖨️ Alle Etiketten drucken</button>
       <h3 class="section-title">Produkte (${products.length})</h3>
       <div class="product-list" id="productList"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Bankkarte anlegen / aufladen</h3>
+      <div class="form-row">
+        <input id="cardCode" type="text" placeholder="Karten-QR-Nummer (z.B. 900)">
+        <input id="cardAmount" type="number" step="0.01" min="0" placeholder="Aufladebetrag in €">
+      </div>
+      <button class="add-btn" id="addCard">💳 Anlegen / Aufladen</button>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Bankkarten (${cards.length})</h3>
+      <div id="cardList"></div>
     </div>
   `;
 
@@ -486,9 +536,7 @@ function renderProdukte(){
       selectedEmoji = em;
       picker.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));
       b.classList.add('selected');
-      if(!currentPhoto){
-        document.getElementById('photoPreview').innerHTML = em;
-      }
+      if(!currentPhoto){ document.getElementById('photoPreview').innerHTML = em; }
     });
     picker.appendChild(b);
   });
@@ -505,9 +553,7 @@ function renderProdukte(){
       currentPhoto = await resizeImageFile(file);
       photoPreview.innerHTML = `<img src="${currentPhoto}">`;
       removePhotoBtn.style.display = 'inline-block';
-    }catch(e){
-      alert('Foto konnte nicht geladen werden.');
-    }
+    }catch(e){ alert('Foto konnte nicht geladen werden.'); }
   });
   removePhotoBtn.addEventListener('click', () => {
     currentPhoto = null;
@@ -519,29 +565,49 @@ function renderProdukte(){
   document.getElementById('addProduct').addEventListener('click', async () => {
     const name = document.getElementById('pname').value.trim();
     const price = parseFloat(document.getElementById('pprice').value);
-    if(!name || isNaN(price) || price < 0){
-      alert('Bitte Name und gültigen Preis eingeben.');
+    const code = document.getElementById('pcode').value.trim();
+    if(!name || isNaN(price) || price < 0 || !code){
+      alert('Bitte Name, Preis und QR-Nummer eingeben.');
       return;
     }
-    const product = {
-      id: 'p_' + Date.now(),
-      name, price,
-      emoji: selectedEmoji,
-      photo: currentPhoto,
-      barcode: nextBarcode()
-    };
-    products.push(product);
+    if(products.some(p => p.code === code)){
+      alert('Diese QR-Nummer wird schon für ein anderes Produkt verwendet.');
+      return;
+    }
+    if(cards.some(c => c.code === code)){
+      alert('Diese Nummer wird schon für eine Bankkarte verwendet. Bitte eine andere QR-Nummer wählen.');
+      return;
+    }
+    products.push({ id: 'p_' + Date.now(), name, price, emoji: selectedEmoji, photo: currentPhoto, code });
     await saveProducts();
     currentPhoto = null;
-    renderProdukte();
+    renderVerwaltung();
   });
 
-  document.getElementById('printLabels').addEventListener('click', () => {
-    buildPrintArea();
-    window.print();
+  document.getElementById('addCard').addEventListener('click', async () => {
+    const code = document.getElementById('cardCode').value.trim();
+    const amount = parseFloat(document.getElementById('cardAmount').value);
+    if(!code || isNaN(amount) || amount <= 0){
+      alert('Bitte Karten-Nummer und einen positiven Betrag eingeben.');
+      return;
+    }
+    if(products.some(p => p.code === code)){
+      alert('Diese Nummer wird schon für ein Produkt verwendet. Bitte eine andere Nummer für die Karte wählen.');
+      return;
+    }
+    const existing = cards.find(c => c.code === code);
+    if(existing){ existing.balance = +(existing.balance + amount).toFixed(2); }
+    else{ cards.push({ code, balance: +amount.toFixed(2) }); }
+    await saveCards();
+    document.getElementById('cardCode').value = '';
+    document.getElementById('cardAmount').value = '';
+    renderCardList();
+    const cardTitles = app.querySelectorAll('.section-title');
+    if(cardTitles[3]) cardTitles[3].textContent = `Bankkarten (${cards.length})`;
   });
 
   renderProductList();
+  renderCardList();
 }
 
 function renderProductList(){
@@ -560,12 +626,9 @@ function renderProductList(){
       ${p.photo ? `<img class="photo" src="${p.photo}">` : `<div class="emoji">${p.emoji}</div>`}
       <div class="pname">${escapeHtml(p.name)}</div>
       <div class="pprice">${p.price.toFixed(2)} €</div>
-      <svg class="barcode" data-code="${p.barcode}"></svg>
+      <div class="pcode">QR: ${escapeHtml(p.code)}</div>
     `;
     list.appendChild(card);
-  });
-  list.querySelectorAll('.barcode').forEach(svg => {
-    JsBarcode(svg, svg.dataset.code, {format:"CODE128", width:2, height:40, displayValue:true, fontSize:12, margin:4});
   });
   list.querySelectorAll('.del-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -578,28 +641,95 @@ function renderProductList(){
   });
 }
 
-function buildPrintArea(){
-  const area = document.getElementById('printArea');
-  area.innerHTML = '';
-  products.forEach(p => {
-    const label = document.createElement('div');
-    label.className = 'label';
-    label.innerHTML = `
-      ${p.photo ? `<img class="photo" src="${p.photo}">` : `<div class="emoji">${p.emoji}</div>`}
-      <div class="lname">${escapeHtml(p.name)}</div>
-      <div class="lprice">${p.price.toFixed(2)} €</div>
-      <svg class="pbarcode" data-code="${p.barcode}"></svg>
+function renderCardList(){
+  const list = document.getElementById('cardList');
+  if(!list) return;
+  list.innerHTML = '';
+  if(cards.length === 0){
+    list.innerHTML = '<p class="empty-hint">Noch keine Bankkarten angelegt.</p>';
+    return;
+  }
+  cards.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'cart-row';
+    row.innerHTML = `
+      <span class="emoji">💳</span>
+      <span class="name">QR: ${escapeHtml(c.code)}</span>
+      <span class="line-total">${c.balance.toFixed(2)} €</span>
+      <button class="rm" data-code="${c.code}">🗑️</button>
     `;
-    area.appendChild(label);
+    list.appendChild(row);
   });
-  area.querySelectorAll('.pbarcode').forEach(svg => {
-    JsBarcode(svg, svg.dataset.code, {format:"CODE128", width:2, height:36, displayValue:true, fontSize:11, margin:2});
+  list.querySelectorAll('.rm').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(confirm('Diese Karte wirklich löschen?')){
+        cards = cards.filter(c => c.code !== btn.dataset.code);
+        await saveCards();
+        renderCardList();
+      }
+    });
   });
 }
 
+/* ---------- EINKAUFSLISTE (SIMULATOR) ---------- */
+function renderListe(){
+  screenTitle.textContent = "🛒 Einkaufsliste";
+  homeBtn.style.display = 'inline-block';
+  settingsBtn.style.display = 'none';
+  generateShoppingList();
+}
+
+function generateShoppingList(){
+  if(products.length === 0){
+    app.innerHTML = `<div class="card"><p class="empty-hint">Noch keine Produkte angelegt. Bitte zuerst im Verwaltungsbereich (⚙️) welche hinzufügen.</p></div>`;
+    return;
+  }
+  const shuffled = [...products].sort(() => 0.5 - Math.random());
+  const count = Math.min(7, shuffled.length);
+  shoppingList = shuffled.slice(0, count).map(p => ({...p, done:false}));
+  renderListeUI();
+}
+
+function renderListeUI(){
+  const doneCount = shoppingList.filter(i => i.done).length;
+  app.innerHTML = `
+    <div class="card">
+      <h3 class="section-title">Deine Einkaufsliste (${doneCount}/${shoppingList.length})</h3>
+      <div id="listeItems"></div>
+      <button class="print-btn" id="newListBtn" style="margin-top:14px;">🔄 Neue Liste</button>
+      <button class="pay-btn" id="toKasseBtn" ${doneCount < shoppingList.length ? 'disabled' : ''}>🧾 Weiter zur Kasse</button>
+    </div>
+  `;
+  const container = document.getElementById('listeItems');
+  shoppingList.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'cart-row' + (item.done ? ' liste-done' : '');
+    row.style.cursor = 'pointer';
+    row.innerHTML = `
+      ${item.photo ? `<img class="photo" src="${item.photo}">` : `<span class="emoji">${item.emoji}</span>`}
+      <span class="name">${escapeHtml(item.name)}</span>
+      <span>${item.done ? '✅' : '⭕'}</span>
+    `;
+    row.addEventListener('click', () => {
+      shoppingList[idx].done = !shoppingList[idx].done;
+      renderListeUI();
+    });
+    container.appendChild(row);
+  });
+  document.getElementById('newListBtn').addEventListener('click', generateShoppingList);
+  const toKasseBtn = document.getElementById('toKasseBtn');
+  if(toKasseBtn){
+    toKasseBtn.addEventListener('click', () => {
+      if(shoppingList.every(i => i.done)) renderKasse();
+    });
+  }
+}
+
+/* ---------- KASSE ---------- */
 function renderKasse(){
   screenTitle.textContent = "🧾 Kasse";
   homeBtn.style.display = 'inline-block';
+  settingsBtn.style.display = 'none';
   cart = [];
   app.innerHTML = `
     <button class="scan-btn" id="toggleScan">📷 Scannen starten</button>
@@ -613,7 +743,8 @@ function renderKasse(){
         <span>Gesamt</span>
         <span id="cartTotal">0,00 €</span>
       </div>
-      <button class="pay-btn" id="payBtn" disabled>💶 Bezahlen</button>
+      <button class="pay-btn" id="payBtn" disabled>💶 Bar bezahlen</button>
+      <button class="photo-btn" id="manualCardBtn" style="margin-top:10px;width:100%;">💳 Karten-Code manuell eingeben</button>
     </div>
 
     <div class="card">
@@ -624,6 +755,7 @@ function renderKasse(){
 
   document.getElementById('toggleScan').addEventListener('click', toggleScan);
   document.getElementById('payBtn').addEventListener('click', openPayModal);
+  document.getElementById('manualCardBtn').addEventListener('click', openManualCardModal);
 
   const grid = document.getElementById('manualGrid');
   if(products.length === 0){
@@ -655,8 +787,8 @@ async function toggleScan(){
   scanner = new Html5Qrcode("reader");
   const config = {
     fps: 10,
-    qrbox: { width: 260, height: 140 },
-    formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128 ]
+    qrbox: { width: 250, height: 250 },
+    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
   };
   try{
     await scanner.start({ facingMode: "environment" }, config, onScanSuccess, () => {});
@@ -672,26 +804,29 @@ function onScanSuccess(decodedText){
   const now = Date.now();
   if(decodedText === lastScan.code && now - lastScan.time < 1500) return;
   lastScan = {code: decodedText, time: now};
-  const product = products.find(p => p.barcode === decodedText);
+
+  const card = cards.find(c => c.code === decodedText);
+  if(card){
+    attemptCardPayment(decodedText);
+    return;
+  }
+
   const flash = document.getElementById('scanFlash');
+  const product = products.find(p => p.code === decodedText);
   if(product){
     beep(880, 0.1);
     addToCart(product);
-    flash.textContent = `✅ ${product.emoji} ${product.name} hinzugefügt`;
+    if(flash){ flash.textContent = `✅ ${product.emoji || '📦'} ${product.name} hinzugefügt`; setTimeout(()=>flash.textContent='',1800); }
   }else{
     beep(220, 0.2);
-    flash.textContent = `❓ Unbekannter Code: ${decodedText}`;
+    if(flash){ flash.textContent = `❓ Unbekannter Code: ${decodedText}`; setTimeout(()=>flash.textContent='',1800); }
   }
-  setTimeout(() => { flash.textContent = ''; }, 1800);
 }
 
 function addToCart(product){
   const existing = cart.find(c => c.productId === product.id);
-  if(existing){
-    existing.qty += 1;
-  }else{
-    cart.push({productId: product.id, name: product.name, price: product.price, emoji: product.emoji, photo: product.photo, qty: 1});
-  }
+  if(existing){ existing.qty += 1; }
+  else{ cart.push({productId: product.id, name: product.name, price: product.price, emoji: product.emoji, photo: product.photo, qty: 1}); }
   renderCart();
 }
 
@@ -704,10 +839,8 @@ function renderCart(){
   if(cart.length === 0){
     list.innerHTML = '<p class="empty-hint">Noch nichts im Warenkorb. Scanne ein Produkt!</p>';
   }
-  let total = 0;
   cart.forEach((c, idx) => {
     const lineTotal = c.price * c.qty;
-    total += lineTotal;
     const row = document.createElement('div');
     row.className = 'cart-row';
     row.innerHTML = `
@@ -725,18 +858,18 @@ function renderCart(){
       renderCart();
     });
   });
+  const total = getCartTotal();
   totalEl.textContent = total.toFixed(2).replace('.', ',') + ' €';
   payBtn.disabled = cart.length === 0;
-  payBtn.dataset.total = total.toFixed(2);
 }
 
 function openPayModal(){
-  const total = parseFloat(document.getElementById('payBtn').dataset.total || '0');
+  const total = getCartTotal();
   const bg = document.createElement('div');
   bg.className = 'modal-bg';
   bg.innerHTML = `
     <div class="modal">
-      <h2>💶 Bezahlen</h2>
+      <h2>💶 Bar bezahlen</h2>
       <p>Zu zahlen: <strong>${total.toFixed(2).replace('.', ',')} €</strong></p>
       <input type="number" step="0.01" min="0" id="paidInput" placeholder="Gegeben (€)">
       <div class="change-display" id="changeDisplay"></div>
@@ -768,14 +901,60 @@ function openPayModal(){
   input.focus();
 }
 
-function escapeHtml(str){
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
+async function attemptCardPayment(code){
+  const flash = document.getElementById('scanFlash');
+  const card = cards.find(c => c.code === code);
+  if(!card){
+    if(flash){ flash.textContent = `❓ Unbekannter Karten-Code: ${code}`; setTimeout(()=>flash.textContent='',1800); }
+    return;
+  }
+  const total = getCartTotal();
+  if(cart.length === 0 || total <= 0){
+    beep(220, 0.2);
+    if(flash){ flash.textContent = 'Warenkorb ist leer – nichts zu bezahlen.'; setTimeout(()=>flash.textContent='',1800); }
+    return;
+  }
+  if(card.balance >= total){
+    const oldBalance = card.balance;
+    card.balance = +(card.balance - total).toFixed(2);
+    await saveCards();
+    beep(880, 0.15);
+    cart = [];
+    renderCart();
+    alert(`💳 Mit Karte bezahlt!\nAlt: ${oldBalance.toFixed(2)} €\nBezahlt: ${total.toFixed(2)} €\nNeues Guthaben: ${card.balance.toFixed(2)} €`);
+    if(flash){ flash.textContent = '🎉 Mit Karte bezahlt! Nächster Kunde bitte.'; setTimeout(()=>flash.textContent='',2500); }
+  }else{
+    beep(220, 0.25);
+    alert(`❌ Nicht genug Guthaben!\nEinkauf kostet: ${total.toFixed(2)} €\nKarte hat nur: ${card.balance.toFixed(2)} €`);
+  }
+}
+
+function openManualCardModal(){
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `
+    <div class="modal">
+      <h2>💳 Karten-Code eingeben</h2>
+      <input type="text" id="manualCardInput" placeholder="Karten-Nummer">
+      <div class="modal-actions">
+        <button class="cancel" id="manualCardCancel">Abbrechen</button>
+        <button class="confirm" id="manualCardOk">Bezahlen</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(bg);
+  document.getElementById('manualCardInput').focus();
+  document.getElementById('manualCardCancel').addEventListener('click', () => bg.remove());
+  document.getElementById('manualCardOk').addEventListener('click', async () => {
+    const code = document.getElementById('manualCardInput').value.trim();
+    bg.remove();
+    if(code) await attemptCardPayment(code);
+  });
 }
 
 (async function init(){
   await loadProducts();
+  await loadCards();
   goHome();
 })();
 </script>
