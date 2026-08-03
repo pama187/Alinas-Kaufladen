@@ -17,7 +17,6 @@ import android.widget.FrameLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -30,7 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private static final int CAMERA_PERMISSION_CODE = 1001;
     private static final int FILE_CHOOSER_CODE = 2001;
@@ -42,11 +41,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        // Sicherheitsnetz: Falls irgendwo ein Fehler auftritt, zeige ihn
-        // lesbar auf dem Bildschirm an, statt dass die App einfach schließt.
         try {
+            super.onCreate(savedInstanceState);
             initApp();
         } catch (Throwable t) {
             showError(t);
