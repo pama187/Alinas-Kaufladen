@@ -829,7 +829,31 @@ async function toggleScan(){
 
   try{
     const detector = new BarcodeDetector({ formats: ['qr_code'] });
-    scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    scanStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
+      }
+    });
+
+    // Bestmöglich Autofokus und leichten Hardware-Zoom aktivieren,
+    // damit auch kleine QR-Codes scharf und groß genug erkannt werden.
+    // Wird lautlos ignoriert, falls das Gerät das nicht unterstützt.
+    try{
+      const track = scanStream.getVideoTracks()[0];
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      const advanced = [];
+      if(caps.focusMode && caps.focusMode.includes('continuous')){
+        advanced.push({ focusMode: 'continuous' });
+      }
+      if(caps.zoom){
+        const z = Math.min(caps.zoom.max, Math.max(caps.zoom.min, caps.zoom.min + (caps.zoom.max - caps.zoom.min) * 0.15));
+        advanced.push({ zoom: z });
+      }
+      if(advanced.length) await track.applyConstraints({ advanced });
+    }catch(e){ /* Gerät unterstützt das nicht - kein Problem, weiter geht's */ }
+
     scanVideo = document.createElement('video');
     scanVideo.setAttribute('playsinline', '');
     scanVideo.muted = true;
@@ -843,11 +867,27 @@ async function toggleScan(){
     activeCode = null;
     lastSeenTime = 0;
 
+    // Zusätzlich zum Hardware-Zoom wird digital in die Bildmitte
+    // hineingezoomt - das hilft besonders bei kleinen, aufgedruckten
+    // QR-Codes wie den 1x1cm-Etiketten.
+    const zoomCanvas = document.createElement('canvas');
+    const zoomCtx = zoomCanvas.getContext('2d');
+    const DIGITAL_ZOOM = 2.2;
+
     const loop = async () => {
       if(!scanLoopActive) return;
-      if(scanVideo && scanVideo.readyState >= 2){
+      if(scanVideo && scanVideo.readyState >= 2 && scanVideo.videoWidth > 0){
         try{
-          const results = await detector.detect(scanVideo);
+          const vw = scanVideo.videoWidth, vh = scanVideo.videoHeight;
+          const cropW = vw / DIGITAL_ZOOM;
+          const cropH = vh / DIGITAL_ZOOM;
+          const sx = (vw - cropW) / 2;
+          const sy = (vh - cropH) / 2;
+          zoomCanvas.width = cropW;
+          zoomCanvas.height = cropH;
+          zoomCtx.drawImage(scanVideo, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
+
+          const results = await detector.detect(zoomCanvas);
           const now = Date.now();
           if(results.length > 0){
             lastSeenTime = now;
