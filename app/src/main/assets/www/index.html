@@ -832,8 +832,8 @@ async function toggleScan(){
     scanStream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: { ideal: 'environment' },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
+        width: { ideal: 3840 },
+        height: { ideal: 2160 }
       }
     });
 
@@ -869,14 +869,19 @@ async function toggleScan(){
 
     // Zusätzlich zum Hardware-Zoom wird digital in die Bildmitte
     // hineingezoomt - das hilft besonders bei kleinen, aufgedruckten
-    // QR-Codes wie den 1x1cm-Etiketten.
+    // QR-Codes wie den 1x1cm-Etiketten. Bei 4K-Auflösung bleibt dabei
+    // immer noch genug Detailschärfe übrig.
     const zoomCanvas = document.createElement('canvas');
     const zoomCtx = zoomCanvas.getContext('2d');
-    const DIGITAL_ZOOM = 2.2;
+    const DIGITAL_ZOOM = 2.5;
+    let lastDetectTime = 0;
+    const DETECT_INTERVAL_MS = 120; // Erkennung throttlen, 4K-Frames sind aufwendig
 
     const loop = async () => {
       if(!scanLoopActive) return;
-      if(scanVideo && scanVideo.readyState >= 2 && scanVideo.videoWidth > 0){
+      const now = Date.now();
+      if(scanVideo && scanVideo.readyState >= 2 && scanVideo.videoWidth > 0 && now - lastDetectTime >= DETECT_INTERVAL_MS){
+        lastDetectTime = now;
         try{
           const vw = scanVideo.videoWidth, vh = scanVideo.videoHeight;
           const cropW = vw / DIGITAL_ZOOM;
@@ -888,7 +893,6 @@ async function toggleScan(){
           zoomCtx.drawImage(scanVideo, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
 
           const results = await detector.detect(zoomCanvas);
-          const now = Date.now();
           if(results.length > 0){
             lastSeenTime = now;
             const text = results[0].rawValue;
