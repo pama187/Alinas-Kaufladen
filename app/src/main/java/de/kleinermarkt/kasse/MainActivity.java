@@ -4,18 +4,16 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -23,8 +21,6 @@ import androidx.core.content.FileProvider;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -33,6 +29,7 @@ public class MainActivity extends Activity {
 
     private static final int CAMERA_PERMISSION_CODE = 1001;
     private static final int FILE_CHOOSER_CODE = 2001;
+    private static final int SCAN_REQUEST_CODE = 3001;
 
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
@@ -41,15 +38,8 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        try {
-            super.onCreate(savedInstanceState);
-            initApp();
-        } catch (Throwable t) {
-            showError(t);
-        }
-    }
+        super.onCreate(savedInstanceState);
 
-    private void initApp() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -69,22 +59,29 @@ public class MainActivity extends Activity {
         settings.setAllowUniversalAccessFromFileURLs(true);
         settings.setDatabaseEnabled(true);
 
+        // Brücke, damit die Webseite den nativen Kamera-Scanner starten kann
+        webView.addJavascriptInterface(new Object() {
+            @JavascriptInterface
+            public void startScan() {
+                runOnUiThread(() -> {
+                    Intent intent = new Intent(MainActivity.this, ScannerActivity.class);
+                    startActivityForResult(intent, SCAN_REQUEST_CODE);
+                });
+            }
+        }, "AndroidScanner");
+
         webView.setWebChromeClient(new WebChromeClient() {
 
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
                 runOnUiThread(() -> {
-                    try {
-                        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
-                                == PackageManager.PERMISSION_GRANTED) {
-                            request.grant(request.getResources());
-                        } else {
-                            pendingWebPermissionRequest = request;
-                            ActivityCompat.requestPermissions(MainActivity.this,
-                                    new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_CODE);
-                        }
-                    } catch (Throwable t) {
-                        showError(t);
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
+                            == PackageManager.PERMISSION_GRANTED) {
+                        request.grant(request.getResources());
+                    } else {
+                        pendingWebPermissionRequest = request;
+                        ActivityCompat.requestPermissions(MainActivity.this,
+                                new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_CODE);
                     }
                 });
             }
@@ -92,60 +89,39 @@ public class MainActivity extends Activity {
             @Override
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback,
                                               FileChooserParams params) {
-                try {
-                    filePathCallback = callback;
+                filePathCallback = callback;
 
-                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                        File photoFile = null;
-                        try {
-                            photoFile = createImageFile();
-                        } catch (IOException ex) {
-                            photoFile = null;
-                        }
-                        if (photoFile != null) {
-                            cameraPhotoPath = "file:" + photoFile.getAbsolutePath();
-                            Uri photoUri = FileProvider.getUriForFile(MainActivity.this,
-                                    "de.kleinermarkt.kasse.fileprovider", photoFile);
-                            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-                        }
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                    File photoFile = null;
+                    try {
+                        photoFile = createImageFile();
+                    } catch (IOException ex) {
+                        photoFile = null;
                     }
-
-                    Intent pickIntent = new Intent(Intent.ACTION_GET_CONTENT);
-                    pickIntent.addCategory(Intent.CATEGORY_OPENABLE);
-                    pickIntent.setType("image/*");
-
-                    Intent chooserIntent = Intent.createChooser(pickIntent, "Foto auswählen");
-                    if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{takePictureIntent});
+                    if (photoFile != null) {
+                        cameraPhotoPath = "file:" + photoFile.getAbsolutePath();
+                        Uri photoUri = FileProvider.getUriForFile(MainActivity.this,
+                                "de.kleinermarkt.kasse.fileprovider", photoFile);
+                        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
                     }
-
-                    startActivityForResult(chooserIntent, FILE_CHOOSER_CODE);
-                    return true;
-                } catch (Throwable t) {
-                    showError(t);
-                    return false;
                 }
+
+                Intent pickIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                pickIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                pickIntent.setType("image/*");
+
+                Intent chooserIntent = Intent.createChooser(pickIntent, "Foto auswählen");
+                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                    chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{takePictureIntent});
+                }
+
+                startActivityForResult(chooserIntent, FILE_CHOOSER_CODE);
+                return true;
             }
         });
 
         webView.loadUrl("file:///android_asset/www/index.html");
-    }
-
-    private void showError(Throwable t) {
-        StringWriter sw = new StringWriter();
-        t.printStackTrace(new PrintWriter(sw));
-
-        TextView tv = new TextView(this);
-        tv.setText("Fehler beim Start:\n\n" + sw.toString());
-        tv.setTextColor(Color.WHITE);
-        tv.setBackgroundColor(Color.BLACK);
-        tv.setPadding(24, 60, 24, 24);
-        tv.setTextIsSelectable(true);
-
-        ScrollView scroll = new ScrollView(this);
-        scroll.addView(tv);
-        setContentView(scroll);
     }
 
     private File createImageFile() throws IOException {
@@ -169,6 +145,17 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SCAN_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                String code = data.getStringExtra("scanned_code");
+                if (code != null && webView != null) {
+                    String escaped = code.replace("\\", "\\\\").replace("'", "\\'");
+                    webView.evaluateJavascript("handleScannedCode('" + escaped + "')", null);
+                }
+            }
+            return;
+        }
+
         if (requestCode != FILE_CHOOSER_CODE || filePathCallback == null) {
             super.onActivityResult(requestCode, resultCode, data);
             return;
@@ -189,7 +176,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
+        if (webView.canGoBack()) {
             webView.goBack();
         } else {
             super.onBackPressed();
