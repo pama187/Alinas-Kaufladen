@@ -174,7 +174,7 @@ main{
 
 .product-list{
   display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
+  grid-template-columns:repeat(auto-fill, minmax(160px,1fr));
   gap:14px;
 }
 .product-card{
@@ -185,18 +185,18 @@ main{
   text-align:center;
   position:relative;
 }
-.product-card .emoji{font-size:2.2rem;}
-.product-card .photo{width:56px;height:56px;border-radius:12px;object-fit:cover;}
-.product-card .pname{font-weight:800;margin:4px 0 2px;font-size:1.02rem;}
+.product-card .emoji{font-size:3.3rem;}
+.product-card .photo{width:84px;height:84px;border-radius:14px;object-fit:cover;}
+.product-card .pname{font-weight:800;margin:6px 0 2px;font-size:1.02rem;}
 .product-card .pprice{color:var(--red-dark);font-weight:800;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:1.1rem;}
 .product-card .pcode{font-size:0.8rem;color:#8A7458;margin-top:2px;}
 .del-btn{
   position:absolute;top:6px;right:6px;
-  background:var(--red);
+  background:var(--brown);
   color:#fff;
   border:none;
   border-radius:50%;
-  width:26px;height:26px;
+  width:28px;height:28px;
   font-weight:800;
   cursor:pointer;
   line-height:1;
@@ -213,17 +213,6 @@ main{
   margin-bottom:14px;
 }
 
-#reader{
-  width:100%;
-  max-width:340px;
-  height:280px;
-  margin:0 auto 14px;
-  border-radius:18px;
-  overflow:hidden;
-  border:4px solid var(--brown);
-  background:#000;
-}
-#reader video{width:100%;height:100%;object-fit:cover;display:block;}
 .scan-btn{
   display:block;
   margin:0 auto 16px;
@@ -236,6 +225,7 @@ main{
   border-radius:16px;
   padding:14px 28px;
   cursor:pointer;
+  width:100%;
 }
 .scan-flash{
   text-align:center;
@@ -246,7 +236,7 @@ main{
 }
 .manual-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(110px,1fr));
+  grid-template-columns:repeat(auto-fill, minmax(130px,1fr));
   gap:10px;
   margin-top:6px;
 }
@@ -259,8 +249,8 @@ main{
   cursor:pointer;
   font-weight:700;
 }
-.manual-item .emoji{font-size:1.8rem;display:block;}
-.manual-item .photo{width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;margin:0 auto 4px;}
+.manual-item .emoji{font-size:2.7rem;display:block;}
+.manual-item .photo{width:60px;height:60px;border-radius:12px;object-fit:cover;display:block;margin:0 auto 6px;}
 .manual-item:active{background:#FFF2CE;}
 
 .cart-row{
@@ -271,8 +261,8 @@ main{
   border-bottom:1px dashed #E4D3BC;
 }
 .cart-row.liste-done{background:#E8F5E9;opacity:0.7;text-decoration:line-through;border-radius:10px;padding-left:6px;}
-.cart-row .emoji{font-size:1.6rem;}
-.cart-row .photo{width:34px;height:34px;border-radius:8px;object-fit:cover;}
+.cart-row .emoji{font-size:2.4rem;}
+.cart-row .photo{width:51px;height:51px;border-radius:10px;object-fit:cover;}
 .cart-row .name{flex:1;font-weight:700;}
 .cart-row .qty{
   background:var(--cream);
@@ -321,6 +311,8 @@ main{
 }
 .modal-actions .cancel{background:#EFE6D6;color:var(--brown-dark);}
 .modal-actions .confirm{background:var(--green);color:#fff;}
+.modal-actions .edit{background:var(--yellow);color:var(--brown-dark);}
+.modal-actions .delete{background:var(--red);color:#fff;}
 </style>
 </head>
 <body>
@@ -347,12 +339,7 @@ let shoppingList = [];
 let selectedEmoji = EMOJI_CHOICES[0];
 let currentPhoto = null;
 let totalRevenue = 0;
-let scanner = null;
-let scanVideo = null;
-let scanStream = null;
-let scanLoopActive = false;
-let activeCode = null;
-let lastSeenTime = 0;
+let editingProductId = null;
 
 const app = document.getElementById('app');
 const screenTitle = document.getElementById('screenTitle');
@@ -430,16 +417,6 @@ function resizeImageFile(file, maxSize=220, quality=0.7){
   });
 }
 
-async function stopScanner(){
-  scanLoopActive = false;
-  if(scanStream){
-    scanStream.getTracks().forEach(t => t.stop());
-    scanStream = null;
-  }
-  scanVideo = null;
-  activeCode = null;
-}
-
 function escapeHtml(str){
   const d = document.createElement('div');
   d.textContent = str;
@@ -450,9 +427,40 @@ function getCartTotal(){
   return cart.reduce((sum, c) => sum + c.price * c.qty, 0);
 }
 
+/* ---------- NATIVER SCANNER ---------- */
+function startNativeScan(hintText){
+  const flash = document.getElementById('scanFlash');
+  if(window.AndroidScanner && typeof window.AndroidScanner.startScan === 'function'){
+    if(flash && hintText) flash.textContent = hintText;
+    window.AndroidScanner.startScan();
+  }else{
+    if(flash) flash.textContent = 'Scanner ist auf diesem Gerät nicht verfügbar. Bitte Produkte von Hand hinzufügen.';
+  }
+}
+
+// Wird von der nativen Android-App aufgerufen, sobald ein QR-Code erkannt wurde
+function handleScannedCode(decodedText){
+  const card = cards.find(c => c.code === decodedText);
+  if(card){
+    attemptCardPayment(decodedText);
+    return;
+  }
+
+  const flash = document.getElementById('scanFlash');
+  const product = products.find(p => p.code === decodedText);
+  if(product){
+    beep(880, 0.1);
+    addToCart(product);
+    if(flash){ flash.textContent = `✅ ${product.emoji || '📦'} ${product.name} hinzugefügt`; setTimeout(()=>flash.textContent='',1800); }
+  }else{
+    beep(220, 0.2);
+    if(flash){ flash.textContent = `❓ Unbekannter Code: ${decodedText}`; setTimeout(()=>flash.textContent='',1800); }
+  }
+}
+
 /* ---------- HOME ---------- */
-async function goHome(){
-  await stopScanner();
+function goHome(){
+  editingProductId = null;
   screenTitle.textContent = "🏪 Alinas Kaufladen";
   homeBtn.style.display = 'none';
   settingsBtn.style.display = 'inline-block';
@@ -503,24 +511,34 @@ function renderVerwaltung(){
   screenTitle.textContent = "⚙️ Verwaltung";
   homeBtn.style.display = 'inline-block';
   settingsBtn.style.display = 'none';
-  currentPhoto = null;
+
+  const editingProduct = editingProductId ? products.find(p => p.id === editingProductId) : null;
+  if(!editingProduct){
+    editingProductId = null;
+    currentPhoto = null;
+  }else{
+    selectedEmoji = editingProduct.emoji || EMOJI_CHOICES[0];
+    currentPhoto = editingProduct.photo || null;
+  }
+
   app.innerHTML = `
     <div class="card">
-      <h3 class="section-title">Neues Produkt</h3>
+      <h3 class="section-title">${editingProduct ? '✏️ Produkt bearbeiten' : 'Neues Produkt'}</h3>
       <div class="photo-picker">
-        <div class="photo-preview" id="photoPreview">${selectedEmoji}</div>
+        <div class="photo-preview" id="photoPreview">${currentPhoto ? `<img src="${currentPhoto}">` : selectedEmoji}</div>
         <button class="photo-btn" id="takePhotoBtn">📷 Foto aufnehmen/wählen</button>
-        <button class="photo-btn remove" id="removePhotoBtn" style="display:none;">Foto entfernen</button>
+        <button class="photo-btn remove" id="removePhotoBtn" style="${currentPhoto ? '' : 'display:none;'}">Foto entfernen</button>
         <input type="file" accept="image/*" capture="environment" id="photoInput" style="display:none;">
       </div>
       <p class="home-sub" style="font-size:0.9rem;margin:-4px 0 10px;">Oder wähle stattdessen ein Emoji:</p>
       <div class="emoji-picker" id="emojiPicker"></div>
       <div class="form-row">
-        <input id="pname" type="text" placeholder="Name (z.B. Apfel)">
-        <input id="pprice" type="number" step="0.01" min="0" placeholder="Preis in €">
-        <input id="pcode" type="text" placeholder="QR-Nummer (z.B. 123)">
+        <input id="pname" type="text" placeholder="Name (z.B. Apfel)" value="${editingProduct ? escapeHtml(editingProduct.name) : ''}">
+        <input id="pprice" type="number" step="0.01" min="0" placeholder="Preis in €" value="${editingProduct ? editingProduct.price : ''}">
+        <input id="pcode" type="text" placeholder="QR-Nummer (z.B. 123)" value="${editingProduct ? escapeHtml(editingProduct.code) : ''}">
       </div>
-      <button class="add-btn" id="addProduct">➕ Hinzufügen</button>
+      <button class="add-btn" id="addProduct">${editingProduct ? '💾 Änderungen speichern' : '➕ Hinzufügen'}</button>
+      ${editingProduct ? `<button class="photo-btn" id="cancelEditBtn" style="margin-top:8px;">Bearbeitung abbrechen</button>` : ''}
     </div>
 
     <div class="card">
@@ -595,7 +613,7 @@ function renderVerwaltung(){
       alert('Bitte Name, Preis und QR-Nummer eingeben.');
       return;
     }
-    if(products.some(p => p.code === code)){
+    if(products.some(p => p.code === code && p.id !== editingProductId)){
       alert('Diese QR-Nummer wird schon für ein anderes Produkt verwendet.');
       return;
     }
@@ -603,11 +621,28 @@ function renderVerwaltung(){
       alert('Diese Nummer wird schon für eine Bankkarte verwendet. Bitte eine andere QR-Nummer wählen.');
       return;
     }
-    products.push({ id: 'p_' + Date.now(), name, price, emoji: selectedEmoji, photo: currentPhoto, code });
+
+    if(editingProductId){
+      const idx = products.findIndex(p => p.id === editingProductId);
+      if(idx !== -1){
+        products[idx] = { ...products[idx], name, price, emoji: selectedEmoji, photo: currentPhoto, code };
+      }
+      editingProductId = null;
+    }else{
+      products.push({ id: 'p_' + Date.now(), name, price, emoji: selectedEmoji, photo: currentPhoto, code });
+    }
     await saveProducts();
     currentPhoto = null;
     renderVerwaltung();
   });
+
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  if(cancelEditBtn){
+    cancelEditBtn.addEventListener('click', () => {
+      editingProductId = null;
+      renderVerwaltung();
+    });
+  }
 
   document.getElementById('addCard').addEventListener('click', async () => {
     const code = document.getElementById('cardCode').value.trim();
@@ -655,7 +690,7 @@ function renderProductList(){
     const card = document.createElement('div');
     card.className = 'product-card';
     card.innerHTML = `
-      <button class="del-btn" data-id="${p.id}">✕</button>
+      <button class="del-btn" data-id="${p.id}">⋮</button>
       ${p.photo ? `<img class="photo" src="${p.photo}">` : `<div class="emoji">${p.emoji}</div>`}
       <div class="pname">${escapeHtml(p.name)}</div>
       <div class="pprice">${p.price.toFixed(2)} €</div>
@@ -664,13 +699,40 @@ function renderProductList(){
     list.appendChild(card);
   });
   list.querySelectorAll('.del-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if(confirm('Dieses Produkt wirklich löschen?')){
-        products = products.filter(p => p.id !== btn.dataset.id);
-        await saveProducts();
-        renderProductList();
-      }
+    btn.addEventListener('click', () => {
+      const product = products.find(p => p.id === btn.dataset.id);
+      if(product) openProductActionModal(product);
     });
+  });
+}
+
+function openProductActionModal(product){
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `
+    <div class="modal">
+      <h2>${product.photo ? '' : (product.emoji + ' ')}${escapeHtml(product.name)}</h2>
+      <p>Was möchtest du tun?</p>
+      <div class="modal-actions" style="flex-direction:column;">
+        <button class="edit" id="paEdit">✏️ Bearbeiten</button>
+        <button class="delete" id="paDelete">🗑️ Löschen</button>
+        <button class="cancel" id="paCancel">Abbrechen</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(bg);
+  document.getElementById('paCancel').addEventListener('click', () => bg.remove());
+  document.getElementById('paEdit').addEventListener('click', () => {
+    bg.remove();
+    editingProductId = product.id;
+    renderVerwaltung();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  });
+  document.getElementById('paDelete').addEventListener('click', async () => {
+    bg.remove();
+    products = products.filter(p => p.id !== product.id);
+    await saveProducts();
+    renderProductList();
   });
 }
 
@@ -686,7 +748,7 @@ function renderCardList(){
     const row = document.createElement('div');
     row.className = 'cart-row';
     row.innerHTML = `
-      <span class="emoji">💳</span>
+      <span class="emoji" style="font-size:1.6rem;">💳</span>
       <span class="name">QR: ${escapeHtml(c.code)}</span>
       <span class="line-total">${c.balance.toFixed(2)} €</span>
       <button class="rm" data-code="${c.code}">🗑️</button>
@@ -766,7 +828,6 @@ function renderKasse(){
   cart = [];
   app.innerHTML = `
     <button class="scan-btn" id="toggleScan">📷 Scannen starten</button>
-    <div id="reader" style="display:none;"></div>
     <div class="scan-flash" id="scanFlash"></div>
 
     <div class="card">
@@ -786,9 +847,9 @@ function renderKasse(){
     </div>
   `;
 
-  document.getElementById('toggleScan').addEventListener('click', toggleScan);
+  document.getElementById('toggleScan').addEventListener('click', () => startNativeScan(''));
   document.getElementById('payBtn').addEventListener('click', openPayModal);
-  document.getElementById('cardPayBtn').addEventListener('click', () => startScanIfNeeded('📷 Bankkarte vor die Kamera halten...'));
+  document.getElementById('cardPayBtn').addEventListener('click', () => startNativeScan('📷 Bankkarte vor die Kamera halten...'));
 
   const grid = document.getElementById('manualGrid');
   if(products.length === 0){
@@ -804,140 +865,6 @@ function renderKasse(){
   }
 
   renderCart();
-}
-
-async function toggleScan(){
-  const readerDiv = document.getElementById('reader');
-  const btn = document.getElementById('toggleScan');
-  const flash = document.getElementById('scanFlash');
-
-  if(scanLoopActive){
-    await stopScanner();
-    readerDiv.style.display = 'none';
-    readerDiv.innerHTML = '';
-    btn.textContent = '📷 Scannen starten';
-    return;
-  }
-
-  if(!('BarcodeDetector' in window)){
-    if(flash) flash.textContent = 'Dieses Gerät unterstützt die eingebaute QR-Erkennung leider nicht. Bitte "Android System WebView" im Play Store aktualisieren, oder Produkte von Hand hinzufügen.';
-    return;
-  }
-
-  readerDiv.style.display = 'block';
-  btn.textContent = '⏹️ Scannen stoppen';
-
-  try{
-    const detector = new BarcodeDetector({ formats: ['qr_code'] });
-    scanStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 3840 },
-        height: { ideal: 2160 }
-      }
-    });
-
-    // Bestmöglich Autofokus und leichten Hardware-Zoom aktivieren,
-    // damit auch kleine QR-Codes scharf und groß genug erkannt werden.
-    // Wird lautlos ignoriert, falls das Gerät das nicht unterstützt.
-    try{
-      const track = scanStream.getVideoTracks()[0];
-      const caps = track.getCapabilities ? track.getCapabilities() : {};
-      const advanced = [];
-      if(caps.focusMode && caps.focusMode.includes('continuous')){
-        advanced.push({ focusMode: 'continuous' });
-      }
-      if(caps.zoom){
-        const z = Math.min(caps.zoom.max, Math.max(caps.zoom.min, caps.zoom.min + (caps.zoom.max - caps.zoom.min) * 0.15));
-        advanced.push({ zoom: z });
-      }
-      if(advanced.length) await track.applyConstraints({ advanced });
-    }catch(e){ /* Gerät unterstützt das nicht - kein Problem, weiter geht's */ }
-
-    scanVideo = document.createElement('video');
-    scanVideo.setAttribute('playsinline', '');
-    scanVideo.muted = true;
-    scanVideo.autoplay = true;
-    readerDiv.innerHTML = '';
-    readerDiv.appendChild(scanVideo);
-    scanVideo.srcObject = scanStream;
-    await scanVideo.play();
-
-    scanLoopActive = true;
-    activeCode = null;
-    lastSeenTime = 0;
-
-    // Zusätzlich zum Hardware-Zoom wird digital in die Bildmitte
-    // hineingezoomt - das hilft besonders bei kleinen, aufgedruckten
-    // QR-Codes wie den 1x1cm-Etiketten. Bei 4K-Auflösung bleibt dabei
-    // immer noch genug Detailschärfe übrig.
-    const zoomCanvas = document.createElement('canvas');
-    const zoomCtx = zoomCanvas.getContext('2d');
-    const DIGITAL_ZOOM = 2.5;
-    let lastDetectTime = 0;
-    const DETECT_INTERVAL_MS = 120; // Erkennung throttlen, 4K-Frames sind aufwendig
-
-    const loop = async () => {
-      if(!scanLoopActive) return;
-      const now = Date.now();
-      if(scanVideo && scanVideo.readyState >= 2 && scanVideo.videoWidth > 0 && now - lastDetectTime >= DETECT_INTERVAL_MS){
-        lastDetectTime = now;
-        try{
-          const vw = scanVideo.videoWidth, vh = scanVideo.videoHeight;
-          const cropW = vw / DIGITAL_ZOOM;
-          const cropH = vh / DIGITAL_ZOOM;
-          const sx = (vw - cropW) / 2;
-          const sy = (vh - cropH) / 2;
-          zoomCanvas.width = cropW;
-          zoomCanvas.height = cropH;
-          zoomCtx.drawImage(scanVideo, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
-
-          const results = await detector.detect(zoomCanvas);
-          if(results.length > 0){
-            lastSeenTime = now;
-            const text = results[0].rawValue;
-            // Nur auslösen, wenn sich der erkannte Code geändert hat -
-            // solange derselbe Code im Bild bleibt, passiert nichts weiter.
-            if(text !== activeCode){
-              activeCode = text;
-              handleScannedCode(text);
-            }
-          }else if(activeCode && now - lastSeenTime > 600){
-            // Kein Code mehr seit 600ms im Bild -> Code gilt als "entfernt",
-            // ein erneutes Zeigen (auch desselben Codes) darf wieder auslösen.
-            activeCode = null;
-          }
-        }catch(e){ /* einzelner Frame fehlgeschlagen, einfach weiterversuchen */ }
-      }
-      if(scanLoopActive) requestAnimationFrame(loop);
-    };
-    requestAnimationFrame(loop);
-
-  }catch(e){
-    if(flash) flash.textContent = 'Kamera konnte nicht gestartet werden.';
-    btn.textContent = '📷 Scannen starten';
-    scanLoopActive = false;
-    readerDiv.style.display = 'none';
-  }
-}
-
-function handleScannedCode(decodedText){
-  const card = cards.find(c => c.code === decodedText);
-  if(card){
-    attemptCardPayment(decodedText);
-    return;
-  }
-
-  const flash = document.getElementById('scanFlash');
-  const product = products.find(p => p.code === decodedText);
-  if(product){
-    beep(880, 0.1);
-    addToCart(product);
-    if(flash){ flash.textContent = `✅ ${product.emoji || '📦'} ${product.name} hinzugefügt`; setTimeout(()=>flash.textContent='',1800); }
-  }else{
-    beep(220, 0.2);
-    if(flash){ flash.textContent = `❓ Unbekannter Code: ${decodedText}`; setTimeout(()=>flash.textContent='',1800); }
-  }
 }
 
 function addToCart(product){
@@ -1091,14 +1018,6 @@ function showPaymentFailModal(total, balance){
   `;
   document.body.appendChild(bg);
   document.getElementById('closeFailModal').addEventListener('click', () => bg.remove());
-}
-
-async function startScanIfNeeded(hintText){
-  const flash = document.getElementById('scanFlash');
-  if(!scanLoopActive){
-    await toggleScan();
-  }
-  if(flash && hintText) flash.textContent = hintText;
 }
 
 (async function init(){
