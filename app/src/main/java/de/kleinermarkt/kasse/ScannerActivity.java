@@ -10,12 +10,12 @@ import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
-import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ExperimentalGetImage;
 import androidx.camera.core.ImageAnalysis;
@@ -33,7 +33,8 @@ import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
-import java.util.concurrent.ExecutionException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -49,7 +50,14 @@ public class ScannerActivity extends ComponentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        try {
+            initScanner();
+        } catch (Throwable t) {
+            showError(t);
+        }
+    }
 
+    private void initScanner() {
         FrameLayout root = new FrameLayout(this);
         previewView = new PreviewView(this);
         root.addView(previewView, new FrameLayout.LayoutParams(
@@ -100,40 +108,48 @@ public class ScannerActivity extends ComponentActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                             @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == CAMERA_PERM_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startCamera();
-            } else {
-                setResult(RESULT_CANCELED);
-                finish();
+        try {
+            if (requestCode == CAMERA_PERM_CODE) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    startCamera();
+                } else {
+                    setResult(RESULT_CANCELED);
+                    finish();
+                }
             }
+        } catch (Throwable t) {
+            showError(t);
         }
     }
 
     private void startCamera() {
-        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
-        cameraProviderFuture.addListener(() -> {
-            try {
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+        try {
+            ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+            cameraProviderFuture.addListener(() -> {
+                try {
+                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
-                Preview preview = new Preview.Builder().build();
-                preview.setSurfaceProvider(previewView.getSurfaceProvider());
+                    Preview preview = new Preview.Builder().build();
+                    preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
-                ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(1920, 1080))
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build();
-                imageAnalysis.setAnalyzer(cameraExecutor, this::analyzeImage);
+                    ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                            .setTargetResolution(new Size(1920, 1080))
+                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                            .build();
+                    imageAnalysis.setAnalyzer(cameraExecutor, this::analyzeImage);
 
-                CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
+                    CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
 
-                cameraProvider.unbindAll();
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
+                    cameraProvider.unbindAll();
+                    cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
 
-            } catch (ExecutionException | InterruptedException e) {
-                finishWithResult(null);
-            }
-        }, ContextCompat.getMainExecutor(this));
+                } catch (Throwable t) {
+                    runOnUiThread(() -> showError(t));
+                }
+            }, ContextCompat.getMainExecutor(this));
+        } catch (Throwable t) {
+            showError(t);
+        }
     }
 
     @OptIn(markerClass = ExperimentalGetImage.class)
@@ -142,24 +158,28 @@ public class ScannerActivity extends ComponentActivity {
             imageProxy.close();
             return;
         }
-        if (imageProxy.getImage() != null) {
-            InputImage image = InputImage.fromMediaImage(
-                    imageProxy.getImage(), imageProxy.getImageInfo().getRotationDegrees());
-            barcodeScanner.process(image)
-                    .addOnSuccessListener(barcodes -> {
-                        if (!resultSent) {
-                            for (Barcode barcode : barcodes) {
-                                String raw = barcode.getRawValue();
-                                if (raw != null && !raw.isEmpty()) {
-                                    resultSent = true;
-                                    finishWithResult(raw);
-                                    break;
+        try {
+            if (imageProxy.getImage() != null) {
+                InputImage image = InputImage.fromMediaImage(
+                        imageProxy.getImage(), imageProxy.getImageInfo().getRotationDegrees());
+                barcodeScanner.process(image)
+                        .addOnSuccessListener(barcodes -> {
+                            if (!resultSent) {
+                                for (Barcode barcode : barcodes) {
+                                    String raw = barcode.getRawValue();
+                                    if (raw != null && !raw.isEmpty()) {
+                                        resultSent = true;
+                                        finishWithResult(raw);
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                    })
-                    .addOnCompleteListener(task -> imageProxy.close());
-        } else {
+                        })
+                        .addOnCompleteListener(task -> imageProxy.close());
+            } else {
+                imageProxy.close();
+            }
+        } catch (Throwable t) {
             imageProxy.close();
         }
     }
@@ -175,6 +195,22 @@ public class ScannerActivity extends ComponentActivity {
             }
             finish();
         });
+    }
+
+    private void showError(Throwable t) {
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+
+        TextView tv = new TextView(this);
+        tv.setText("Scanner-Fehler:\n\n" + sw.toString());
+        tv.setTextColor(Color.WHITE);
+        tv.setBackgroundColor(Color.BLACK);
+        tv.setPadding(24, 60, 24, 24);
+        tv.setTextIsSelectable(true);
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(tv);
+        setContentView(scroll);
     }
 
     @Override
