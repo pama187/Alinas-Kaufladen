@@ -24,12 +24,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".ScannerActivity"
-            android:exported="false"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-            android:screenOrientation="portrait" />
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="de.kleinermarkt.kasse.fileprovider"
