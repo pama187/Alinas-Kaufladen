@@ -227,6 +227,16 @@ main{
   cursor:pointer;
   width:100%;
 }
+#reader{
+  width:100%;
+  max-width:420px;
+  height:300px;
+  margin:0 auto 14px;
+  border-radius:22px;
+  border:4px solid var(--brown);
+  background:transparent;
+  overflow:hidden;
+}  
 .scan-flash{
   text-align:center;
   font-weight:800;
@@ -428,14 +438,65 @@ function getCartTotal(){
 }
 
 /* ---------- NATIVER SCANNER ---------- */
+let scannerVisible = false;
+
+function reportReaderRect(){
+  const el = document.getElementById('reader');
+  if(!el || el.style.display === 'none') return;
+  if(!(window.AndroidScanner && window.AndroidScanner.setPreviewRect)) return;
+  const rect = el.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  window.AndroidScanner.setPreviewRect(
+    Math.round(rect.left * dpr),
+    Math.round(rect.top * dpr),
+    Math.round(rect.width * dpr),
+    Math.round(rect.height * dpr)
+  );
+}
+
+function toggleContinuousScan(){
+  const readerDiv = document.getElementById('reader');
+  const btn = document.getElementById('toggleScan');
+  const flash = document.getElementById('scanFlash');
+  if(!readerDiv || !btn) return;
+
+  if(scannerVisible){
+    stopScannerIfRunning();
+    return;
+  }
+
+  if(!(window.AndroidScanner && window.AndroidScanner.startContinuousScan)){
+    if(flash) flash.textContent = 'Scanner ist auf diesem Gerät nicht verfügbar. Bitte Produkte von Hand hinzufügen.';
+    return;
+  }
+
+  scannerVisible = true;
+  readerDiv.style.display = 'block';
+  btn.textContent = '⏹️ Scannen stoppen';
+  window.AndroidScanner.startContinuousScan();
+  requestAnimationFrame(() => requestAnimationFrame(reportReaderRect));
+  window.addEventListener('scroll', reportReaderRect);
+  window.addEventListener('resize', reportReaderRect);
+}
+
+function stopScannerIfRunning(){
+  if(!scannerVisible) return;
+  scannerVisible = false;
+  if(window.AndroidScanner && window.AndroidScanner.stopContinuousScan){
+    window.AndroidScanner.stopContinuousScan();
+  }
+  const readerDiv = document.getElementById('reader');
+  const btn = document.getElementById('toggleScan');
+  if(readerDiv) readerDiv.style.display = 'none';
+  if(btn) btn.textContent = '📷 Scannen starten';
+  window.removeEventListener('scroll', reportReaderRect);
+  window.removeEventListener('resize', reportReaderRect);
+}
+
 function startNativeScan(hintText){
   const flash = document.getElementById('scanFlash');
-  if(window.AndroidScanner && typeof window.AndroidScanner.startScan === 'function'){
-    if(flash && hintText) flash.textContent = hintText;
-    window.AndroidScanner.startScan();
-  }else{
-    if(flash) flash.textContent = 'Scanner ist auf diesem Gerät nicht verfügbar. Bitte Produkte von Hand hinzufügen.';
-  }
+  if(!scannerVisible) toggleContinuousScan();
+  if(flash && hintText) flash.textContent = hintText;
 }
 
 // Wird von der nativen Android-App aufgerufen, sobald ein QR-Code erkannt wurde
@@ -460,6 +521,7 @@ function handleScannedCode(decodedText){
 
 /* ---------- HOME ---------- */
 function goHome(){
+  stopScannerIfRunning();
   editingProductId = null;
   screenTitle.textContent = "🏪 Alinas Kaufladen";
   homeBtn.style.display = 'none';
@@ -768,6 +830,7 @@ function renderCardList(){
 
 /* ---------- EINKAUFSLISTE (SIMULATOR) ---------- */
 function renderListe(){
+  stopScannerIfRunning();
   screenTitle.textContent = "🛒 Einkaufsliste";
   homeBtn.style.display = 'inline-block';
   settingsBtn.style.display = 'none';
@@ -828,6 +891,7 @@ function renderKasse(){
   cart = [];
   app.innerHTML = `
     <button class="scan-btn" id="toggleScan">📷 Scannen starten</button>
+    <div id="reader" style="display:none;"></div>
     <div class="scan-flash" id="scanFlash"></div>
 
     <div class="card">
@@ -847,7 +911,7 @@ function renderKasse(){
     </div>
   `;
 
-  document.getElementById('toggleScan').addEventListener('click', () => startNativeScan(''));
+  document.getElementById('toggleScan').addEventListener('click', toggleContinuousScan);
   document.getElementById('payBtn').addEventListener('click', openPayModal);
   document.getElementById('cardPayBtn').addEventListener('click', () => startNativeScan('📷 Bankkarte vor die Kamera halten...'));
 
