@@ -106,6 +106,7 @@ public class MainActivity extends ComponentActivity {
 
         webView = new WebView(this);
         webView.setBackgroundColor(Color.TRANSPARENT);
+        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         root.addView(webView, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
