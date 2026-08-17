@@ -86,7 +86,16 @@ public class MainActivity extends Activity {
                     }
                 });
             }
-        }, "AndroidScanner");
+
+            @JavascriptInterface
+            public void showFeedback(String message) {
+                runOnUiThread(() -> {
+                    if (ScannerActivity.instance != null) {
+                        ScannerActivity.instance.showFeedback(message);
+                    }
+                });
+            }
+        }, "AndroidScanner"); 
 
         webView.setWebChromeClient(new WebChromeClient() {
 
