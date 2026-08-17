@@ -513,15 +513,16 @@ function handleScannedCode(decodedText){
     beep(880, 0.1);
     addToCart(product);
     if(flash){ flash.textContent = `✅ ${product.emoji || '📦'} ${product.name} hinzugefügt`; setTimeout(()=>flash.textContent='',1800); }
+    if(window.AndroidScanner && window.AndroidScanner.showFeedback) window.AndroidScanner.showFeedback(flash.textContent);
   }else{
     beep(220, 0.2);
     if(flash){ flash.textContent = `❓ Unbekannter Code: ${decodedText}`; setTimeout(()=>flash.textContent='',1800); }
+    if(window.AndroidScanner && window.AndroidScanner.showFeedback) window.AndroidScanner.showFeedback(flash.textContent);
   }
 }
 
 /* ---------- HOME ---------- */
 function goHome(){
-  stopScannerIfRunning();
   editingProductId = null;
   screenTitle.textContent = "🏪 Alinas Kaufladen";
   homeBtn.style.display = 'none';
@@ -830,7 +831,6 @@ function renderCardList(){
 
 /* ---------- EINKAUFSLISTE (SIMULATOR) ---------- */
 function renderListe(){
-  stopScannerIfRunning();
   screenTitle.textContent = "🛒 Einkaufsliste";
   homeBtn.style.display = 'inline-block';
   settingsBtn.style.display = 'none';
@@ -911,7 +911,7 @@ function renderKasse(){
     </div>
   `;
 
-  document.getElementById('toggleScan').addEventListener('click', toggleContinuousScan);
+  document.getElementById('toggleScan').addEventListener('click', () => startNativeScan(''));
   document.getElementById('payBtn').addEventListener('click', openPayModal);
   document.getElementById('cardPayBtn').addEventListener('click', () => startNativeScan('📷 Bankkarte vor die Kamera halten...'));
 
